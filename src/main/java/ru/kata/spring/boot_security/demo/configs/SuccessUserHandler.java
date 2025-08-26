@@ -12,14 +12,26 @@ import java.util.Set;
 
 @Component
 public class SuccessUserHandler implements AuthenticationSuccessHandler {
-    // Spring Security использует объект Authentication, пользователя авторизованной сессии.
+
+
     @Override
-    public void onAuthenticationSuccess(HttpServletRequest httpServletRequest, HttpServletResponse httpServletResponse, Authentication authentication) throws IOException {
+    public void onAuthenticationSuccess(HttpServletRequest request,
+                                        HttpServletResponse response,
+                                        Authentication authentication) throws IOException {
+
+        // Просто выводим в консоль для отладки
+        System.out.println("Authentication successful for user: " + authentication.getName());
+        System.out.println("User authorities: " + authentication.getAuthorities());
+
         Set<String> roles = AuthorityUtils.authorityListToSet(authentication.getAuthorities());
-        if (roles.contains("ROLE_USER")) {
-            httpServletResponse.sendRedirect("/user");
+        System.out.println("Roles: " + roles);
+
+        if (roles.contains("ROLE_ADMIN")) {
+            response.sendRedirect("/admin/users");
+        } else if (roles.contains("ROLE_USER")) {
+            response.sendRedirect("/user/profile");
         } else {
-            httpServletResponse.sendRedirect("/");
+            response.sendRedirect("/");
         }
     }
 }
