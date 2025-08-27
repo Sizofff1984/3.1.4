@@ -23,7 +23,6 @@ public class DataInitializer {
         return args -> {
             System.out.println("=== DATABASE INITIALIZATION STARTED ===");
 
-            // Создаем роли если их нет
             try {
                 if (roleService.getAllRoles().isEmpty()) {
                     Role adminRole = new Role("ROLE_ADMIN");
@@ -36,13 +35,11 @@ public class DataInitializer {
                 System.err.println("Error creating roles: " + e.getMessage());
             }
 
-            // Создаем тестовых пользователей если их нет
             try {
                 if (userService.getAllUsers().isEmpty()) {
                     Role adminRole = roleService.getRoleByName("ROLE_ADMIN");
                     Role userRole = roleService.getRoleByName("ROLE_USER");
 
-                    // Admin user
                     User admin = new User();
                     admin.setUsername("admin");
                     admin.setPassword(passwordEncoder.encode("admin"));
@@ -57,7 +54,6 @@ public class DataInitializer {
                     userService.createUser(admin);
                     System.out.println("✓ Admin user created: admin/admin");
 
-                    // Regular user
                     User user = new User();
                     user.setUsername("user");
                     user.setPassword(passwordEncoder.encode("user"));
