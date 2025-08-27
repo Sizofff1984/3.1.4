@@ -24,31 +24,39 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
     @Override
     protected void configure(HttpSecurity http) throws Exception {
         http
-                .csrf().disable() // Отключаем CSRF
                 .authorizeRequests()
-                .antMatchers("/", "/index", "/login", "/css/**").permitAll()
+                .antMatchers("/", "/login", "/css/**").permitAll()
                 .antMatchers("/admin/**").hasRole("ADMIN")
                 .antMatchers("/user/**").hasAnyRole("USER", "ADMIN")
                 .anyRequest().authenticated()
                 .and()
                 .formLogin()
                 .loginPage("/login")
-                .loginProcessingUrl("/login") // URL для обработки формы
-                .usernameParameter("username") // имя поля username
-                .passwordParameter("password") // имя поля password
+                .loginProcessingUrl("/perform_login")
                 .successHandler(successUserHandler)
                 .failureUrl("/login?error=true")
                 .permitAll()
                 .and()
                 .logout()
-                .logoutUrl("/logout")
+                .logoutUrl("/perform_logout")
                 .logoutSuccessUrl("/login?logout=true")
-                .permitAll();
+                .permitAll()
+                .and()
+                .csrf().disable();
     }
 
     @Override
     protected void configure(AuthenticationManagerBuilder auth) throws Exception {
         auth.userDetailsService(userDetailsService).passwordEncoder(passwordEncoder());
+
+        auth.inMemoryAuthentication()
+                .withUser("user")
+                .password(passwordEncoder().encode("user"))
+                .roles("USER")
+                .and()
+                .withUser("admin")
+                .password(passwordEncoder().encode("admin"))
+                .roles("ADMIN", "USER");
     }
 
     @Bean

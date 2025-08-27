@@ -109,19 +109,60 @@ public class AdminController {
         redirectAttributes.addFlashAttribute("success", "User deleted successfully!");
         return "redirect:/admin/users";
     }
-    @GetMapping("/db-info")
+
+    @GetMapping("/db/check")
     @ResponseBody
-    public String showDbInfo() {
+    public String checkDatabase() {
+        StringBuilder info = new StringBuilder();
+        info.append("<h1>Database Check</h1>");
+
+        try {
+            List<User> users = userService.getAllUsers();
+            info.append("<h2>Users (").append(users.size()).append("):</h2>");
+            for (User user : users) {
+                info.append("ID: ").append(user.getId()).append("<br>");
+                info.append("Username: ").append(user.getUsername()).append("<br>");
+                info.append("Password: ").append(user.getPassword()).append("<br>");
+                info.append("Email: ").append(user.getEmail()).append("<br>");
+                info.append("Roles: ").append(user.getRoles()).append("<br><br>");
+            }
+
+            List<Role> roles = roleService.getAllRoles();
+            info.append("<h2>Roles (").append(roles.size()).append("):</h2>");
+            for (Role role : roles) {
+                info.append("ID: ").append(role.getId()).append(", Name: ").append(role.getName()).append("<br>");
+            }
+
+        } catch (Exception e) {
+            info.append("<p style='color: red;'>Error: ").append(e.getMessage()).append("</p>");
+        }
+
+        return info.toString();
+    }
+
+    @GetMapping("/debug/users")
+    @ResponseBody
+    public String debugUsers() {
         List<User> users = userService.getAllUsers();
         StringBuilder info = new StringBuilder();
 
-        info.append("<h2>Users in database:</h2>");
+        info.append("<h2>Database Debug Info</h2>");
+        info.append("<h3>Users:</h3>");
+
         for (User user : users) {
             info.append("ID: ").append(user.getId())
                     .append(", Username: ").append(user.getUsername())
                     .append(", Password: ").append(user.getPassword())
                     .append(", Email: ").append(user.getEmail())
                     .append(", Roles: ").append(user.getRoles())
+                    .append("<br>");
+        }
+
+        info.append("<h3>Roles:</h3>");
+        List<Role> roles = roleService.getAllRoles();
+        for (Role role : roles) {
+            info.append("ID: ").append(role.getId())
+                    .append(", Name: ").append(role.getName())
                     .append("<br>");
         }
 
