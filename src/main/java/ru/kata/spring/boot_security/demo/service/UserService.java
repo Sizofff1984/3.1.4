@@ -7,7 +7,8 @@ public interface UserService {
     List<User> getAllUsers();
     User getUserById(Long id);
     User getUserByUsername(String username);
-    User createUser(User user);
-    User updateUser(User user);
+    User createUser(User user, List<Long> roleIds);
+    User updateUser(User user, List<Long> roleIds);
     void deleteUser(Long id);
+    void initAdminUser(); // ← Добавьте этот метод
 }

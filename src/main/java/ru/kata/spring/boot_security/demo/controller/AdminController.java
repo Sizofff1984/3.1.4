@@ -5,15 +5,12 @@ import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
-import ru.kata.spring.boot_security.demo.model.Role;
 import ru.kata.spring.boot_security.demo.model.User;
 import ru.kata.spring.boot_security.demo.service.RoleService;
 import ru.kata.spring.boot_security.demo.service.UserService;
 
 import javax.validation.Valid;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 
 @Controller
 @RequestMapping("/admin")
@@ -48,22 +45,14 @@ public class AdminController {
             return "admin/add-user";
         }
 
-        if (roleIds != null && !roleIds.isEmpty()) {
-            Set<Role> roles = new HashSet<>();
-            for (Long roleId : roleIds) {
-                Role role = roleService.getAllRoles().stream()
-                        .filter(r -> r.getId().equals(roleId))
-                        .findFirst()
-                        .orElse(null);
-                if (role != null) {
-                    roles.add(role);
-                }
-            }
-            user.setRoles(roles);
+        try {
+            userService.createUser(user, roleIds);
+            redirectAttributes.addFlashAttribute("success", "User added successfully!");
+        } catch (RuntimeException e) {
+            redirectAttributes.addFlashAttribute("error", e.getMessage());
+            return "redirect:/admin/users/add";
         }
 
-        userService.createUser(user);
-        redirectAttributes.addFlashAttribute("success", "User added successfully!");
         return "redirect:/admin/users";
     }
 
@@ -84,88 +73,25 @@ public class AdminController {
             return "admin/edit-user";
         }
 
-        if (roleIds != null && !roleIds.isEmpty()) {
-            Set<Role> roles = new HashSet<>();
-            for (Long roleId : roleIds) {
-                Role role = roleService.getAllRoles().stream()
-                        .filter(r -> r.getId().equals(roleId))
-                        .findFirst()
-                        .orElse(null);
-                if (role != null) {
-                    roles.add(role);
-                }
-            }
-            user.setRoles(roles);
+        try {
+            userService.updateUser(user, roleIds);
+            redirectAttributes.addFlashAttribute("success", "User updated successfully!");
+        } catch (RuntimeException e) {
+            redirectAttributes.addFlashAttribute("error", e.getMessage());
+            return "redirect:/admin/users/edit?id=" + user.getId();
         }
 
-        userService.updateUser(user);
-        redirectAttributes.addFlashAttribute("success", "User updated successfully!");
         return "redirect:/admin/users";
     }
 
     @PostMapping("/users/delete")
     public String deleteUser(@RequestParam Long id, RedirectAttributes redirectAttributes) {
-        userService.deleteUser(id);
-        redirectAttributes.addFlashAttribute("success", "User deleted successfully!");
-        return "redirect:/admin/users";
-    }
-
-    @GetMapping("/db/check")
-    @ResponseBody
-    public String checkDatabase() {
-        StringBuilder info = new StringBuilder();
-        info.append("<h1>Database Check</h1>");
-
         try {
-            List<User> users = userService.getAllUsers();
-            info.append("<h2>Users (").append(users.size()).append("):</h2>");
-            for (User user : users) {
-                info.append("ID: ").append(user.getId()).append("<br>");
-                info.append("Username: ").append(user.getUsername()).append("<br>");
-                info.append("Password: ").append(user.getPassword()).append("<br>");
-                info.append("Email: ").append(user.getEmail()).append("<br>");
-                info.append("Roles: ").append(user.getRoles()).append("<br><br>");
-            }
-
-            List<Role> roles = roleService.getAllRoles();
-            info.append("<h2>Roles (").append(roles.size()).append("):</h2>");
-            for (Role role : roles) {
-                info.append("ID: ").append(role.getId()).append(", Name: ").append(role.getName()).append("<br>");
-            }
-
-        } catch (Exception e) {
-            info.append("<p style='color: red;'>Error: ").append(e.getMessage()).append("</p>");
+            userService.deleteUser(id);
+            redirectAttributes.addFlashAttribute("success", "User deleted successfully!");
+        } catch (RuntimeException e) {
+            redirectAttributes.addFlashAttribute("error", e.getMessage());
         }
-
-        return info.toString();
-    }
-
-    @GetMapping("/debug/users")
-    @ResponseBody
-    public String debugUsers() {
-        List<User> users = userService.getAllUsers();
-        StringBuilder info = new StringBuilder();
-
-        info.append("<h2>Database Debug Info</h2>");
-        info.append("<h3>Users:</h3>");
-
-        for (User user : users) {
-            info.append("ID: ").append(user.getId())
-                    .append(", Username: ").append(user.getUsername())
-                    .append(", Password: ").append(user.getPassword())
-                    .append(", Email: ").append(user.getEmail())
-                    .append(", Roles: ").append(user.getRoles())
-                    .append("<br>");
-        }
-
-        info.append("<h3>Roles:</h3>");
-        List<Role> roles = roleService.getAllRoles();
-        for (Role role : roles) {
-            info.append("ID: ").append(role.getId())
-                    .append(", Name: ").append(role.getName())
-                    .append("<br>");
-        }
-
-        return info.toString();
+        return "redirect:/admin/users";
     }
 }
