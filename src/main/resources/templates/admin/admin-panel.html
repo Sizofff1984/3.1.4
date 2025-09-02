@@ -1,0 +1,734 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Panel</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body {
+            margin: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f8f9fa;
+        }
+
+        .top-bar {
+            background-color: #2c3e50;
+            color: white;
+            padding: 15px 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            font-size: 14px;
+        }
+
+        .user-email {
+            font-weight: bold;
+            font-size: 16px;
+        }
+
+        .logout-btn {
+            background-color: #e74c3c;
+            color: white;
+            padding: 8px 16px;
+            border-radius: 4px;
+            text-decoration: none;
+            transition: background-color 0.2s;
+        }
+
+        .logout-btn:hover {
+            background-color: #c0392b;
+            color: white;
+            text-decoration: none;
+        }
+
+        .sidebar {
+            background-color: #ecf0f1;
+            width: 200px;
+            height: calc(100vh - 70px);
+            position: fixed;
+            left: 0;
+            top: 70px;
+            padding-top: 20px;
+            box-shadow: 2px 0 4px rgba(0,0,0,0.1);
+        }
+
+        .tab-link {
+            display: block;
+            padding: 15px 20px;
+            color: #2c3e50;
+            text-decoration: none;
+            border-left: 4px solid transparent;
+            transition: all 0.2s;
+            font-weight: 500;
+        }
+
+        .tab-link:hover {
+            background-color: #d5dbdb;
+            color: #2c3e50;
+            text-decoration: none;
+            border-left-color: #3498db;
+        }
+
+        .tab-link.active {
+            background-color: #d5dbdb;
+            border-left-color: #3498db;
+            color: #2c3e50;
+        }
+
+        .main-content {
+            margin-left: 200px;
+            padding: 30px;
+        }
+
+        .main-content h1 {
+            color: #2c3e50;
+            margin-bottom: 30px;
+            font-weight: 600;
+        }
+
+        .tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 30px;
+            border-bottom: 2px solid #ddd;
+            padding-bottom: 10px;
+        }
+
+        .tab {
+            padding: 12px 24px;
+            background-color: #f8f9fa;
+            border: 2px solid #ddd;
+            border-radius: 6px 6px 0 0;
+            color: #6c757d;
+            text-decoration: none;
+            font-weight: 500;
+            transition: all 0.2s;
+            cursor: pointer;
+        }
+
+        .tab:hover {
+            background-color: #e9ecef;
+            color: #495057;
+            text-decoration: none;
+        }
+
+        .tab.active {
+            background-color: #007bff;
+            color: white;
+            border-color: #007bff;
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .table-container {
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+
+        .table {
+            margin-bottom: 0;
+        }
+
+        .table th {
+            background-color: #f8f9fa;
+            border-bottom: 2px solid #dee2e6;
+            color: #495057;
+            font-weight: 600;
+            padding: 15px;
+        }
+
+        .table td {
+            padding: 15px;
+            vertical-align: middle;
+            border-bottom: 1px solid #dee2e6;
+        }
+
+        .table tbody tr:nth-child(even) {
+            background-color: #f8f9fa;
+        }
+
+        .btn-edit, .btn-delete {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 4px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-edit {
+            background-color: #007bff;
+            color: white;
+        }
+
+        .btn-edit:hover {
+            background-color: #0056b3;
+            transform: translateY(-1px);
+        }
+
+        .btn-delete {
+            background-color: #dc3545;
+            color: white;
+        }
+
+        .btn-delete:hover {
+            background-color: #c82333;
+            transform: translateY(-1px);
+        }
+
+        .form-container {
+            background-color: white;
+            border-radius: 8px;
+            padding: 30px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        .form-container h4 {
+            text-align: center;
+            margin-bottom: 25px;
+            color: #2c3e50;
+            font-weight: 600;
+        }
+
+        .form-label {
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: #2c3e50;
+        }
+
+        .btn-add {
+            background-color: #28a745;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 6px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.2s;
+            width: 100%;
+            margin-top: 10px;
+        }
+
+        .btn-add:hover {
+            background-color: #218838;
+            transform: translateY(-1px);
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #ddd;
+            border-radius: 6px;
+            font-size: 14px;
+            transition: border-color 0.2s;
+        }
+
+        .form-control:focus {
+            border-color: #3498db;
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.1);
+        }
+
+        .form-select {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #ddd;
+            border-radius: 6px;
+            font-size: 14px;
+            background-color: white;
+        }
+
+        .form-select:focus {
+            border-color: #3498db;
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.1);
+        }
+
+        .alert {
+            margin-bottom: 20px;
+            padding: 12px 16px;
+            border-radius: 6px;
+            font-size: 14px;
+        }
+
+        .alert-success {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .alert-danger {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+
+        .mb-3 {
+            margin-bottom: 20px;
+        }
+
+        .modal-body {
+            padding: 2rem;
+        }
+
+        .modal-body .form-control,
+        .modal-body .form-select {
+            width: 100%;
+            max-width: 50%;
+            margin: 0 auto;
+        }
+
+        .modal-body .form-label {
+            display: block;
+            text-align: center;
+            margin-bottom: 0.5rem;
+        }
+
+        .modal-body .row {
+            margin: 0;
+        }
+    </style>
+</head>
+<body>
+<div class="top-bar">
+    <div class="user-info">
+        <span class="user-email" sec:authentication="name">admin@mail.ru</span>
+        <span>with roles:</span>
+        <span sec:authorize="hasRole('ADMIN')">ADMIN</span>
+        <span sec:authorize="hasRole('USER')">USER</span>
+    </div>
+    <a th:href="@{/perform_logout}" class="logout-btn">Logout</a>
+</div>
+
+<div class="sidebar">
+    <a href="#" class="tab-link active" onclick="showAdminTab()">Admin</a>
+    <a href="#" class="tab-link" onclick="showUserTab()">User</a>
+</div>
+
+<div class="main-content">
+    <h1>Admin panel</h1>
+
+    <div class="tabs">
+        <a href="#" class="tab active" onclick="showTab('users-table')">Users table</a>
+        <a href="#" class="tab" onclick="showTab('new-user')">New User</a>
+    </div>
+
+    <div th:if="${success}" class="alert alert-success">
+        <span th:text="${success}"></span>
+    </div>
+
+    <div th:if="${error}" class="alert alert-danger">
+        <span th:text="${error}"></span>
+    </div>
+
+    <div id="users-table" class="tab-content active">
+        <h3>All users</h3>
+        <div class="table-container">
+            <table class="table">
+                <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>First Name</th>
+                    <th>Last Name</th>
+                    <th>Age</th>
+                    <th>Email</th>
+                    <th>Role</th>
+                    <th>Edit</th>
+                    <th>Delete</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:each="user : ${users}">
+                    <td th:text="${user.id}"></td>
+                    <td th:text="${user.firstName}"></td>
+                    <td th:text="${user.lastName}"></td>
+                    <td th:text="${user.age}"></td>
+                    <td th:text="${user.email}"></td>
+                    <td>
+                        <span th:text="${#strings.listJoin(user.sortedRoles.![name.replace('ROLE_', '')], ' ')}"></span>
+                    </td>
+                    <td>
+                        <button class="btn-edit"
+                                data-bs-toggle="modal"
+                                data-bs-target="#editModal"
+                                th:data-user-id="${user.id}"
+                                th:data-first-name="${user.firstName}"
+                                th:data-last-name="${user.lastName}"
+                                th:data-age="${user.age}"
+                                th:data-email="${user.email}"
+                                th:data-role-names="${user.sortedRoleNames}"
+>
+                            Edit
+                        </button>
+                    </td>
+                    <td>
+                        <button class="btn-delete"
+                                data-bs-toggle="modal"
+                                data-bs-target="#deleteModal"
+                                th:data-user-id="${user.id}"
+                                th:data-first-name="${user.firstName}"
+                                th:data-last-name="${user.lastName}"
+                                th:data-age="${user.age}"
+                                th:data-email="${user.email}"
+                                th:data-role-names="${user.sortedRoleNames}">
+                            Delete
+                        </button>
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <div id="new-user" class="tab-content">
+        <div class="form-container">
+            <h4>Add new user</h4>
+            <form th:action="@{/admin/users/add}" th:object="${user}" method="post">
+                <div class="mb-3">
+                    <label class="form-label">First name</label>
+                    <input type="text" class="form-control" th:field="*{firstName}" required minlength="2">
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Last name</label>
+                    <input type="text" class="form-control" th:field="*{lastName}" required minlength="2">
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Age</label>
+                    <input type="number" class="form-control" th:field="*{age}" required min="1" max="150">
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Email</label>
+                    <input type="email" class="form-control" th:field="*{email}" required>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Password</label>
+                    <input type="password" class="form-control" th:field="*{password}" required minlength="4">
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Role</label>
+                    <select class="form-select" name="roleIds" multiple size="3" required>
+                        <option th:each="role : ${allRoles}"
+                                th:value="${role.id}"
+                                th:text="${role.name.replace('ROLE_', '')}">
+                        </option>
+                    </select>
+                </div>
+                <button type="submit" class="btn-add">Add new user</button>
+            </form>
+        </div>
+    </div>
+
+    <div id="user-info" class="tab-content">
+        <h3>User information</h3>
+        <div class="table-container">
+            <table class="table">
+                <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>First Name</th>
+                    <th>Last Name</th>
+                    <th>Age</th>
+                    <th>Email</th>
+                    <th>Role</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:each="user : ${users}" th:if="${user.email == #authentication.name}">
+                    <td th:text="${user.id}"></td>
+                    <td th:text="${user.firstName}"></td>
+                    <td th:text="${user.lastName}"></td>
+                    <td th:text="${user.age}"></td>
+                    <td th:text="${user.email}"></td>
+                    <td>
+                        <span th:text="${#strings.listJoin(user.sortedRoles.![name.replace('ROLE_', '')], ' ')}"></span>
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Edit Modal -->
+<div class="modal fade" id="editModal" tabindex="-1" aria-labelledby="editModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="editModalLabel">Edit user</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="editForm" th:action="@{/admin/users/edit}" method="post">
+                    <input type="hidden" name="id" id="editUserIdHidden">
+
+                    <div class="mb-3 text-center">
+                        <label class="form-label">ID</label>
+                        <input type="text" class="form-control" id="editUserIdField" disabled>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">First name</label>
+                        <input type="text" class="form-control" name="firstName" id="editFirstName" required>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Last name</label>
+                        <input type="text" class="form-control" name="lastName" id="editLastName" required>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Age</label>
+                        <input type="number" class="form-control" name="age" id="editAge" required>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Email</label>
+                        <input type="email" class="form-control" name="email" id="editEmail" required>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Password</label>
+                        <input type="password" class="form-control" name="password">
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Role</label>
+                        <select class="form-select" name="roleIds" multiple size="3">
+                            <option th:each="role : ${allRoles}"
+                                    th:value="${role.id}"
+                                    th:text="${role.name.replace('ROLE_', '')}">
+                            </option>
+                        </select>
+                    </div>
+
+                    <div class="d-flex gap-2 mt-3 justify-content-end">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                        <button type="submit" class="btn btn-primary">Edit</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Delete Modal -->
+<div class="modal fade" id="deleteModal" tabindex="-1" aria-labelledby="deleteModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="deleteModalLabel">Delete user</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="deleteForm" th:action="@{/admin/users/delete}" method="post">
+                    <input type="hidden" name="id" id="deleteUserId">
+
+                    <div class="mb-3 text-center">
+                        <label class="form-label">ID</label>
+                        <input type="text" class="form-control" id="deleteUserIdField" disabled style="width: 50%; margin: 0 auto;">
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">First name</label>
+                        <input type="text" class="form-control" id="deleteFirstName" disabled>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Last name</label>
+                        <input type="text" class="form-control" id="deleteLastName" disabled>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Age</label>
+                        <input type="number" class="form-control" id="deleteAge" disabled>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Email</label>
+                        <input type="email" class="form-control" id="deleteEmail" disabled>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Role</label>
+                        <select class="form-select" id="deleteRoles" disabled multiple size="3">
+                            <option th:each="role : ${allRoles}"
+                                    th:value="${role.id}"
+                                    th:text="${role.name.replace('ROLE_', '')}">
+                            </option>
+                        </select>
+                    </div>
+
+                    <div class="d-flex gap-2 mt-3 justify-content-end">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                        <button type="submit" class="btn btn-danger">Delete</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+    
+    
+    function showTab(tabName) {
+        document.querySelectorAll('.tab-content').forEach(content => {
+            content.style.display = 'none';
+            content.classList.remove('active');
+        });
+        document.querySelectorAll('.tab').forEach(tab => tab.classList.remove('active'));
+
+        const tab = document.getElementById(tabName);
+        if (tab) {
+            tab.style.display = 'block';
+            tab.classList.add('active');
+        }
+
+        if (event?.target?.classList.contains('tab')) {
+            event.target.classList.add('active');
+        }
+    }
+
+    function showAdminTab() {
+        document.querySelectorAll('.tab-link').forEach(link => link.classList.remove('active'));
+
+        document.querySelectorAll('.tab-content').forEach(content => {
+            content.style.display = 'none';
+            content.classList.remove('active');
+        });
+
+        const usersTable = document.getElementById('users-table');
+        if (usersTable) {
+            usersTable.style.display = 'block';
+            usersTable.classList.add('active');
+        }
+
+        document.querySelectorAll('.tab').forEach(tab => tab.classList.remove('active'));
+        const tabButton = document.querySelector('.tab[onclick="showTab(\'users-table\')"]');
+        if (tabButton) tabButton.classList.add('active');
+    }
+
+    function showUserTab() {
+        document.querySelectorAll('.tab-link').forEach(link => link.classList.remove('active'));
+
+        document.querySelectorAll('.tab-content').forEach(content => {
+            content.style.display = 'none';
+            content.classList.remove('active');
+        });
+
+        const userInfo = document.getElementById('user-info');
+        if (userInfo) {
+            userInfo.style.display = 'block';
+            userInfo.classList.add('active');
+        }
+    }
+
+    document.addEventListener('DOMContentLoaded', function () {
+        showAdminTab();
+
+        document.addEventListener('click', function (event) {
+            const target = event.target;
+
+            if (target.classList.contains('btn-edit')) {
+
+                const userData = {
+                    userId: target.getAttribute('data-user-id'),
+                    firstName: target.getAttribute('data-first-name'),
+                    lastName: target.getAttribute('data-last-name'),
+                    age: target.getAttribute('data-age'),
+                    email: target.getAttribute('data-email'),
+                    roleNamesStr: target.getAttribute('data-role-names') || ''
+                };
+
+
+                const hiddenField = document.getElementById('editUserIdHidden');
+                const idField = document.getElementById('editUserIdField');
+                const firstNameField = document.getElementById('editFirstName');
+                const lastNameField = document.getElementById('editLastName');
+                const ageField = document.getElementById('editAge');
+                const emailField = document.getElementById('editEmail');
+                
+
+
+                if (hiddenField) hiddenField.value = userData.userId || '';
+                if (idField) idField.value = userData.userId || '';
+                if (firstNameField) firstNameField.value = userData.firstName || '';
+                if (lastNameField) lastNameField.value = userData.lastName || '';
+                if (ageField) ageField.value = userData.age || '';
+                if (emailField) emailField.value = userData.email || '';
+                
+
+
+                const roleNames = userData.roleNamesStr.split(',').map(r => r.trim());
+                const select = document.querySelector('#editModal select[name="roleIds"]');
+                if (select) {
+                    Array.from(select.options).forEach(option => {
+                        option.selected = roleNames.includes(option.textContent.trim());
+                    });
+                }
+            }
+
+            if (target.classList.contains('btn-delete')) {
+
+                const userData = {
+                    userId: target.getAttribute('data-user-id'),
+                    firstName: target.getAttribute('data-first-name'),
+                    lastName: target.getAttribute('data-last-name'),
+                    age: target.getAttribute('data-age'),
+                    email: target.getAttribute('data-email'),
+                    roleNamesStr: target.getAttribute('data-role-names') || ''
+                };
+
+
+                const deleteUserId = document.getElementById('deleteUserId');
+                const deleteUserIdField = document.getElementById('deleteUserIdField');
+                const deleteFirstName = document.getElementById('deleteFirstName');
+                const deleteLastName = document.getElementById('deleteLastName');
+                const deleteAge = document.getElementById('deleteAge');
+                const deleteEmail = document.getElementById('deleteEmail');
+                
+
+
+                if (deleteUserId) deleteUserId.value = userData.userId || '';
+                if (deleteUserIdField) deleteUserIdField.value = userData.userId || '';
+                if (deleteFirstName) deleteFirstName.value = userData.firstName || '';
+                if (deleteLastName) deleteLastName.value = userData.lastName || '';
+                if (deleteAge) deleteAge.value = userData.age || '';
+                if (deleteEmail) deleteEmail.value = userData.email || '';
+                
+
+
+                const roleNames = userData.roleNamesStr.split(',').map(r => r.trim());
+                const select = document.getElementById('deleteRoles');
+                if (select) {
+                    Array.from(select.options).forEach(option => {
+                        option.selected = roleNames.includes(option.textContent.trim());
+                    });
+                }
+            }
+        });
+    });
+</script>
+</body>

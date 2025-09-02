@@ -19,5 +19,6 @@ public class DataInitializer implements CommandLineRunner {
     public void run(String... args) throws Exception {
         roleService.initRoles();
         userService.initAdminUser();
+        userService.initUser();
     }
 }

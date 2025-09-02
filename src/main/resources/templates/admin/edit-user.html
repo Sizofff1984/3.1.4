@@ -1,63 +1,348 @@
 <!DOCTYPE html>
 <html xmlns="http://www.w3.org/1999/xhtml"
-      xmlns:th="https://www.thymeleaf.org">
+      xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
 <head>
-    <title>Edit User</title>
+    <meta charset="UTF-8">
+    <title>Admin Panel</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <style>
-        body { font-family: Arial, sans-serif; margin: 20px; }
-        .form-group { margin-bottom: 15px; }
-        label { display: block; margin-bottom: 5px; font-weight: bold; }
-        input, select { padding: 8px; width: 300px; border: 1px solid #ccc; border-radius: 3px; }
-        .error { color: red; font-size: 14px; }
-        .btn { padding: 8px 16px; margin: 5px; text-decoration: none; color: white; border-radius: 3px; border: none; }
-        .btn-primary { background-color: #007bff; }
-        .btn-secondary { background-color: #6c757d; }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f0f2f5;
+            margin: 0;
+            padding: 0;
+        }
+        .top-bar {
+            background-color: #2c3e50;
+            color: white;
+            padding: 10px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 14px;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 1000;
+            height: 60px;
+        }
+        .logout-btn {
+            color: white;
+            text-decoration: none;
+            font-size: 14px;
+            padding: 5px 10px;
+            border-radius: 4px;
+            background-color: #34495e;
+            transition: background 0.2s;
+        }
+        .logout-btn:hover {
+            background-color: #2c3e50;
+        }
+        .sidebar {
+            width: 200px;
+            height: calc(100vh - 60px);
+            background-color: #ecf0f1;
+            position: fixed;
+            top: 60px;
+            left: 0;
+            border-right: 1px solid #bdc3c7;
+            padding: 20px 0;
+            z-index: 999;
+        }
+        .sidebar a {
+            display: block;
+            padding: 12px 20px;
+            text-decoration: none;
+            color: #34495e;
+            font-size: 14px;
+            transition: background 0.2s;
+        }
+        .sidebar a.active {
+            background-color: #3498db;
+            color: white;
+        }
+        .sidebar a:hover:not(.active) {
+            background-color: #bdc3c7;
+        }
+        .main-content {
+            margin-left: 200px;
+            padding: 20px;
+            min-height: calc(100vh - 60px);
+            margin-top: 60px;
+        }
+        .tabs {
+            display: flex;
+            border-bottom: 1px solid #ddd;
+            margin-bottom: 20px;
+        }
+        .tabs a {
+            padding: 10px 20px;
+            cursor: pointer;
+            border: 1px solid transparent;
+            border-bottom: none;
+            background-color: #f9f9f9;
+            font-size: 14px;
+            text-decoration: none;
+            color: #333;
+            transition: all 0.2s;
+        }
+        .tabs a.active {
+            background-color: white;
+            border-bottom: 1px solid #ccc;
+            font-weight: bold;
+        }
+        .table-container {
+            background-color: white;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            overflow: hidden;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .table thead th {
+            background-color: #f5f5f5;
+            color: #333;
+            font-weight: 600;
+            padding: 12px 15px;
+            text-align: left;
+            font-size: 14px;
+        }
+        .table tbody tr {
+            border-bottom: 1px solid #eee;
+        }
+        .table tbody tr:last-child {
+            border-bottom: none;
+        }
+        .table tbody td {
+            padding: 12px 15px;
+            font-size: 14px;
+        }
+        .table tbody tr:nth-child(even) {
+            background-color: #f9f9f9;
+        }
+        .btn-edit {
+            background-color: #3498db;
+            color: white;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 4px;
+            font-size: 12px;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        .btn-edit:hover {
+            background-color: #2980b9;
+        }
+        .btn-delete {
+            background-color: #e74c3c;
+            color: white;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 4px;
+            font-size: 12px;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        .btn-delete:hover {
+            background-color: #c0392b;
+        }
+        .alert {
+            margin-bottom: 20px;
+        }
+        .modal-body .form-control,
+        .modal-body .form-select {
+            width: 100%;
+            max-width: 50%;
+            margin: 0 auto;
+        }
+        .modal-body .form-label {
+            display: block;
+            text-align: center;
+            margin-bottom: 0.5rem;
+        }
+        .modal-body .row {
+            margin: 0;
+        }
     </style>
 </head>
 <body>
-<h1>Edit User</h1>
-
-<p>
-    <a th:href="@{/admin/users}" class="btn btn-secondary">Back to Users List</a>
-</p>
-
-<form th:action="@{/admin/users/edit}" th:object="${user}" method="post">
-    <input type="hidden" th:field="*{id}"/>
-
-    <div class="form-group">
-        <label>Username:</label>
-        <input type="text" th:field="*{username}" required/>
-        <div th:if="${#fields.hasErrors('username')}" th:errors="*{username}" class="error"></div>
+<div class="top-bar">
+    <span sec:authentication="name"></span> with roles:
+    <span sec:authorize="hasRole('ADMIN')">ADMIN</span>
+    <span sec:authorize="hasRole('USER')">USER</span>
+    <a th:href="@{/perform_logout}" class="logout-btn">Logout</a>
+</div>
+<div class="sidebar">
+    <a href="#" class="active">Admin</a>
+    <a href="#">User</a>
+</div>
+<div class="main-content">
+    <h1>Admin panel</h1>
+    <div class="tabs">
+        <a href="/admin/users" class="tab active">Users table</a>
+        <a href="/admin/users/add" class="tab">New User</a>
+    </div>
+    <div th:if="${success}" class="alert alert-success">
+        <span th:text="${success}"></span>
+    </div>
+    <div th:if="${error}" class="alert alert-danger">
+        <span th:text="${error}"></span>
+    </div>
+    <div class="table-container">
+        <table class="table">
+            <thead>
+            <tr>
+                <th>ID</th>
+                <th>First Name</th>
+                <th>Last Name</th>
+                <th>Age</th>
+                <th>Email</th>
+                <th>Role</th>
+                <th>Edit</th>
+                <th>Delete</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr th:each="user : ${users}">
+                <td th:text="${user.id}"></td>
+                <td th:text="${user.firstName}"></td>
+                <td th:text="${user.lastName}"></td>
+                <td th:text="${user.age}"></td>
+                <td th:text="${user.email}"></td>
+                <td>
+                    <span th:text="${#strings.join(user.roles.![name.replace('ROLE_', '')], ' ')}"></span>
+                </td>
+                <td>
+                    <button class="btn-edit"
+                            data-bs-toggle="modal"
+                            data-bs-target="#editModal"
+                            th:data-user-id="${user.id}"
+                            th:data-first-name="${user.firstName}"
+                            th:data-last-name="${user.lastName}"
+                            th:data-age="${user.age}"
+                            th:data-email="${user.email}"
+                            th:data-role-names="${#strings.join(user.roles.![name], ',')}">
+                        Edit
+                    </button>
+                </td>
+                <td>
+                    <form th:action="@{/admin/users/delete}" method="post" style="display: inline-block;">
+                        <input type="hidden" name="id" th:value="${user.id}" />
+                        <button type="submit" class="btn-delete">Delete</button>
+                    </form>
+                </td>
+            </tr>
+            </tbody>
+        </table>
     </div>
 
-    <div class="form-group">
-        <label>Password (leave empty to keep current):</label>
-        <input type="password" th:field="*{password}"/>
-        <div th:if="${#fields.hasErrors('password')}" th:errors="*{password}" class="error"></div>
-    </div>
+    <div class="modal fade" id="editModal" tabindex="-1" aria-labelledby="editModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="editModalLabel">Edit User</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="editForm" th:action="@{/admin/users/edit}" method="post">
+                        <input type="hidden" th:field="*{id}" />
 
-    <div class="form-group">
-        <label>Email:</label>
-        <input type="email" th:field="*{email}" required/>
-        <div th:if="${#fields.hasErrors('email')}" th:errors="*{email}" class="error"></div>
-    </div>
-
-    <div class="form-group">
-        <label>Age:</label>
-        <input type="number" th:field="*{age}" required/>
-        <div th:if="${#fields.hasErrors('age')}" th:errors="*{age}" class="error"></div>
-    </div>
-
-    <div class="form-group">
-        <label>Roles:</label>
-        <div th:each="role : ${allRoles}">
-            <input type="checkbox" name="roles" th:value="${role.id}"
-                   th:checked="${user.roles.contains(role)}"/>
-            <label th:text="${role.name}"></label>
+                        <div class="mb-3 text-center">
+                            <label class="form-label">ID</label>
+                            <input type="text" class="form-control" id="editUserIdField" disabled style="width: 50%; margin: 0 auto;">
+                        </div>
+                        <div class="row mb-3">
+                            <div class="col-md-6 offset-md-3">
+                                <label class="form-label">First name</label>
+                                <input type="text" class="form-control" name="firstName" id="editFirstName" required>
+                            </div>
+                        </div>
+                        <div class="row mb-3">
+                            <div class="col-md-6 offset-md-3">
+                                <label class="form-label">Last name</label>
+                                <input type="text" class="form-control" name="lastName" id="editLastName" required>
+                            </div>
+                        </div>
+                        <div class="row mb-3">
+                            <div class="col-md-6 offset-md-3">
+                                <label class="form-label">Age</label>
+                                <input type="number" class="form-control" name="age" id="editAge" required>
+                            </div>
+                        </div>
+                        <div class="row mb-3">
+                            <div class="col-md-6 offset-md-3">
+                                <label class="form-label">Email</label>
+                                <input type="email" class="form-control" name="email" id="editEmail" required>
+                            </div>
+                        </div>
+                        <div class="row mb-3">
+                            <div class="col-md-6 offset-md-3">
+                                <label class="form-label">Password</label>
+                                <input type="password" class="form-control" name="password">
+                            </div>
+                        </div>
+                        <div class="row mb-3">
+                            <div class="col-md-6 offset-md-3">
+                                <label class="form-label">Role</label>
+                                <select class="form-select" name="roleIds" multiple size="4">
+                                    <option th:each="role : ${allRoles}"
+                                            th:value="${role.id}"
+                                            th:text="${role.name.replace('ROLE_', '')}">
+                                    </option>
+                                </select>
+                                <small class="text-muted d-block mt-1">Hold Ctrl (or Cmd) to select multiple roles.</small>
+                            </div>
+                        </div>
+                        <div class="d-flex gap-2 mt-3 justify-content-end">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                            <button type="submit" class="btn btn-primary">Edit</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
         </div>
     </div>
+</div>
 
-    <button type="submit" class="btn btn-primary">Update User</button>
-</form>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const editModal = document.getElementById('editModal');
+        if (editModal) {
+            editModal.addEventListener('shown.bs.modal', function (event) {
+                const button = event.relatedTarget;
+                const userId = button.getAttribute('data-user-id');
+                const firstName = button.getAttribute('data-first-name');
+                const lastName = button.getAttribute('data-last-name');
+                const age = button.getAttribute('data-age');
+                const email = button.getAttribute('data-email');
+                const roleNamesStr = button.getAttribute('data-role-names');
+
+                document.getElementById('editUserId').value = userId;
+                document.getElementById('editUserIdField').value = userId;
+                document.getElementById('editFirstName').value = firstName;
+                document.getElementById('editLastName').value = lastName;
+                document.getElementById('editAge').value = age;
+                document.getElementById('editEmail').value = email;
+
+                if (roleNamesStr) {
+                    const roleNames = roleNamesStr
+                        .replace(/[\[\]]/g, '')
+                        .split(',')
+                        .map(r => r.trim().replace('ROLE_', ''));
+
+                    const roleSelect = document.querySelector('#editModal select[name="roleIds"]');
+                    if (roleSelect) {
+                        const options = roleSelect.querySelectorAll('option');
+                        options.forEach(option => {
+                            option.selected = roleNames.includes(option.textContent.trim());
+                        });
+                    }
+                }
+            });
+        }
+    });
+</script>
 </body>
 </html>

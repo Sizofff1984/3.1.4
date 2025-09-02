@@ -1,15 +1,13 @@
 package ru.kata.spring.boot_security.demo.service;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 import ru.kata.spring.boot_security.demo.model.Role;
 import ru.kata.spring.boot_security.demo.repository.RoleRepository;
 
 import java.util.List;
-import java.util.Optional;
 
 @Service
-@Transactional
 public class RoleServiceImpl implements RoleService {
     private final RoleRepository roleRepository;
 
@@ -23,24 +21,24 @@ public class RoleServiceImpl implements RoleService {
     }
 
     @Override
-    public Role getRoleByName(String name) {
-        return roleRepository.findByName(name)
-                .orElseThrow(() -> new RuntimeException("Role not found: " + name));
+    public Role getRoleById(Long id) {
+        return roleRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Role not found with id: " + id));
     }
 
     @Override
-    public Role createRole(Role role) {
-        if (roleRepository.findByName(role.getName()).isPresent()) {
-            throw new RuntimeException("Role already exists: " + role.getName());
-        }
-        return roleRepository.save(role);
+    public Role getRoleByName(String name) {
+        return roleRepository.findByName(name)
+                .orElseThrow(() -> new RuntimeException("Role not found with name: " + name));
     }
 
     @Override
     public void initRoles() {
-        if (roleRepository.count() == 0) {
-            createRole(new Role("ROLE_USER"));
-            createRole(new Role("ROLE_ADMIN"));
+        if (roleRepository.findByName("ROLE_USER").isEmpty()) {
+            roleRepository.save(new Role("ROLE_USER"));
+        }
+        if (roleRepository.findByName("ROLE_ADMIN").isEmpty()) {
+            roleRepository.save(new Role("ROLE_ADMIN"));
         }
     }
 }
