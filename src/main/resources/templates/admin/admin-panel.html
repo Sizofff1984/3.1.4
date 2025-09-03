@@ -79,9 +79,10 @@
         }
 
         .tab-link.active {
-            background-color: #d5dbdb;
-            border-left-color: #3498db;
-            color: #2c3e50;
+            background-color: #007bff;
+            color: white;
+            border-left-color: #007bff;
+            font-weight: 600;
         }
 
         .main-content {
@@ -613,6 +614,10 @@
 
     function showAdminTab() {
         document.querySelectorAll('.tab-link').forEach(link => link.classList.remove('active'));
+        
+        // Устанавливаем активную вкладку в боковой панели
+        const adminLink = document.querySelector('.tab-link[onclick="showAdminTab()"]');
+        if (adminLink) adminLink.classList.add('active');
 
         document.querySelectorAll('.tab-content').forEach(content => {
             content.style.display = 'none';
@@ -632,6 +637,10 @@
 
     function showUserTab() {
         document.querySelectorAll('.tab-link').forEach(link => link.classList.remove('active'));
+        
+        // Устанавливаем активную вкладку в боковой панели
+        const userLink = document.querySelector('.tab-link[onclick="showUserTab()"]');
+        if (userLink) userLink.classList.add('active');
 
         document.querySelectorAll('.tab-content').forEach(content => {
             content.style.display = 'none';
