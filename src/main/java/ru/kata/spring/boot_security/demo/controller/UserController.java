@@ -18,20 +18,11 @@ public class UserController {
         this.userService = userService;
     }
 
-    @GetMapping("/profile")
+    @GetMapping
     public String showUserProfile(Authentication authentication, Model model) {
         String email = authentication.getName();
-        System.out.println("Looking for user with email: " + email);
-        
-        try {
-            User user = userService.getUserByEmail(email);
-            System.out.println("Found user: " + user.getEmail() + " with ID: " + user.getId());
-            model.addAttribute("user", user);
-        } catch (RuntimeException e) {
-            System.out.println("Error finding user: " + e.getMessage());
-            model.addAttribute("user", null);
-        }
-        
+        User user = userService.getUserByEmail(email);
+        model.addAttribute("user", user);
         return "user/profile";
     }
 }

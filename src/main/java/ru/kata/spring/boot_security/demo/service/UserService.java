@@ -13,6 +13,4 @@ public interface UserService {
     User createUser(User user, List<Long> roleIds);
     User updateUser(User updatedUser, List<Long> roleIds);
     void deleteUser(Long id);
-    void initAdminUser();
-    void initUser();
 }

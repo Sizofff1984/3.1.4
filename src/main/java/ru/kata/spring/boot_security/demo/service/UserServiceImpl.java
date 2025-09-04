@@ -3,7 +3,6 @@ package ru.kata.spring.boot_security.demo.service;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.transaction.support.TransactionSynchronizationManager;
 import ru.kata.spring.boot_security.demo.model.Role;
 import ru.kata.spring.boot_security.demo.model.User;
 import ru.kata.spring.boot_security.demo.repository.UserRepository;
@@ -77,21 +76,14 @@ public class UserServiceImpl implements UserService {
     @Override
     @Transactional
     public User updateUser(User updatedUser, List<Long> roleIds) {
-        System.out.println("=== НАЧАЛО updateUser. HASH: " + this.hashCode() + " ===");
-        System.out.println("Текущая транзакция: " + TransactionSynchronizationManager.getCurrentTransactionName());
-        System.out.println("Внутри транзакции: " + TransactionSynchronizationManager.isActualTransactionActive());
-        System.out.println("ID полученного пользователя: " + (updatedUser != null ? updatedUser.getId() : "null"));
-
         User existingUser = userRepository.findById(updatedUser.getId())
                 .orElseThrow(() -> new RuntimeException("User not found with id: " + updatedUser.getId()));
-
 
         if (!existingUser.getEmail().equals(updatedUser.getEmail())) {
             if (userRepository.existsByEmail(updatedUser.getEmail())) {
                 throw new RuntimeException("Email already exists: " + updatedUser.getEmail());
             }
         }
-
 
         existingUser.setFirstName(updatedUser.getFirstName());
         existingUser.setLastName(updatedUser.getLastName());
@@ -102,21 +94,8 @@ public class UserServiceImpl implements UserService {
             existingUser.setPassword(passwordEncoder.encode(updatedUser.getPassword()));
         }
 
-        Set<Role> roles = new HashSet<>();
-        if (roleIds != null && !roleIds.isEmpty()) {
-            for (Long roleId : roleIds) {
-                Role role = roleService.getRoleById(roleId);
-                roles.add(role);
-            }
-        } else {
-            roles.add(roleService.getRoleByName("ROLE_USER"));
-        }
-        existingUser.setRoles(roles);
-
-        User savedUser = userRepository.save(existingUser);
-        System.out.println("=== ПОСЛЕ save(). ID в БД: " + savedUser.getId());
-        System.out.println("Пароль сохранен: " + (savedUser.getPassword() != null));
-        return savedUser;
+        setUserRoles(existingUser, roleIds);
+        return userRepository.save(existingUser);
     }
 
     @Override
@@ -126,52 +105,6 @@ public class UserServiceImpl implements UserService {
         userRepository.delete(user);
     }
 
-    @Override
-    @Transactional
-    public void initAdminUser() {
-        if (userRepository.findByEmail("admin@mail.ru").isEmpty()) {
-            User admin = new User();
-            admin.setEmail("admin@mail.ru");
-            admin.setPassword(passwordEncoder.encode("admin"));
-            admin.setAge(30);
-            admin.setFirstName("Admin");
-            admin.setLastName("User");
-
-            Set<Role> roles = new HashSet<>();
-            Role adminRole = roleService.getRoleByName("ROLE_ADMIN");
-            if (adminRole == null) {
-                throw new RuntimeException("ROLE_ADMIN not found in database");
-            }
-            roles.add(adminRole);
-            admin.setRoles(roles);
-
-            userRepository.save(admin);
-        }
-    }
-
-    @Override
-    @Transactional
-    public void initUser() {
-        if (userRepository.findByEmail("user@mail.ru").isEmpty()) {
-            User user = new User();
-            user.setEmail("user@mail.ru");
-            user.setPassword(passwordEncoder.encode("user"));
-            user.setFirstName("User");
-            user.setLastName("User");
-            user.setAge(30);
-
-            Set<Role> roles = new HashSet<>();
-            Role userRole = roleService.getRoleByName("ROLE_USER");
-            if (userRole != null) {
-                roles.add(userRole);
-            } else {
-                throw new RuntimeException("ROLE_USER not found in database");
-            }
-            user.setRoles(roles);
-
-            userRepository.save(user);
-        }
-    }
 
     private void setUserRoles(User user, List<Long> roleIds) {
         if (roleIds != null && !roleIds.isEmpty()) {
