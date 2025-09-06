@@ -323,16 +323,16 @@
 </div>
 
 <div class="sidebar">
-    <a href="#" class="tab-link active" onclick="showAdminTab()">Admin</a>
-    <a href="#" class="tab-link" onclick="showUserTab()">User</a>
+    <a href="javascript:void(0)" class="tab-link active" onclick="showAdminTab(); return false;">Admin</a>
+    <a href="javascript:void(0)" class="tab-link" onclick="showUserTab(); return false;">User</a>
 </div>
 
 <div class="main-content">
     <h1>Admin panel</h1>
 
     <div class="tabs">
-        <a href="#" class="tab active" onclick="showTab('users-table')">Users table</a>
-        <a href="#" class="tab" onclick="showTab('new-user')">New User</a>
+        <a href="javascript:void(0)" class="tab active" onclick="showTab('users-table'); return false;">Users table</a>
+        <a href="javascript:void(0)" class="tab" onclick="showTab('new-user'); return false;">New User</a>
     </div>
 
     <div th:if="${success}" class="alert alert-success">
@@ -346,7 +346,7 @@
     <div id="users-table" class="tab-content active">
         <h3>All users</h3>
         <div class="table-container">
-            <table class="table">
+            <table class="table" id="usersTable">
                 <thead>
                 <tr>
                     <th>ID</th>
@@ -359,44 +359,8 @@
                     <th>Delete</th>
                 </tr>
                 </thead>
-                <tbody>
-                <tr th:each="user : ${users}">
-                    <td th:text="${user.id}"></td>
-                    <td th:text="${user.firstName}"></td>
-                    <td th:text="${user.lastName}"></td>
-                    <td th:text="${user.age}"></td>
-                    <td th:text="${user.email}"></td>
-                    <td>
-                        <span th:text="${#strings.listJoin(user.sortedRoles.![name.replace('ROLE_', '')], ' ')}"></span>
-                    </td>
-                    <td>
-                        <button class="btn-edit"
-                                data-bs-toggle="modal"
-                                data-bs-target="#editModal"
-                                th:data-user-id="${user.id}"
-                                th:data-first-name="${user.firstName}"
-                                th:data-last-name="${user.lastName}"
-                                th:data-age="${user.age}"
-                                th:data-email="${user.email}"
-                                th:data-role-names="${user.sortedRoleNames}"
->
-                            Edit
-                        </button>
-                    </td>
-                    <td>
-                        <button class="btn-delete"
-                                data-bs-toggle="modal"
-                                data-bs-target="#deleteModal"
-                                th:data-user-id="${user.id}"
-                                th:data-first-name="${user.firstName}"
-                                th:data-last-name="${user.lastName}"
-                                th:data-age="${user.age}"
-                                th:data-email="${user.email}"
-                                th:data-role-names="${user.sortedRoleNames}">
-                            Delete
-                        </button>
-                    </td>
-                </tr>
+                <tbody id="usersTableBody">
+                <!-- Users will be loaded here via JavaScript -->
                 </tbody>
             </table>
         </div>
@@ -405,34 +369,31 @@
     <div id="new-user" class="tab-content">
         <div class="form-container">
             <h4>Add new user</h4>
-            <form th:action="@{/admin/users/add}" th:object="${user}" method="post">
+            <form id="addUserForm">
                 <div class="mb-3">
                     <label class="form-label">First name</label>
-                    <input type="text" class="form-control" th:field="*{firstName}" required minlength="2">
+                    <input type="text" class="form-control" id="addFirstName" required minlength="2">
                 </div>
                 <div class="mb-3">
                     <label class="form-label">Last name</label>
-                    <input type="text" class="form-control" th:field="*{lastName}" required minlength="2">
+                    <input type="text" class="form-control" id="addLastName" required minlength="2">
                 </div>
                 <div class="mb-3">
                     <label class="form-label">Age</label>
-                    <input type="number" class="form-control" th:field="*{age}" required min="1" max="150">
+                    <input type="number" class="form-control" id="addAge" required min="1" max="150">
                 </div>
                 <div class="mb-3">
                     <label class="form-label">Email</label>
-                    <input type="email" class="form-control" th:field="*{email}" required>
+                    <input type="email" class="form-control" id="addEmail" required>
                 </div>
                 <div class="mb-3">
                     <label class="form-label">Password</label>
-                    <input type="password" class="form-control" th:field="*{password}" required minlength="4">
+                    <input type="password" class="form-control" id="addPassword" required minlength="4">
                 </div>
                 <div class="mb-3">
                     <label class="form-label">Role</label>
-                    <select class="form-select" name="roleIds" multiple size="3" required>
-                        <option th:each="role : ${allRoles}"
-                                th:value="${role.id}"
-                                th:text="${role.name.replace('ROLE_', '')}">
-                        </option>
+                    <select class="form-select" id="addRoleIds" multiple size="3" required>
+                        <!-- Roles will be loaded here via JavaScript -->
                     </select>
                 </div>
                 <button type="submit" class="btn-add">Add new user</button>
@@ -462,7 +423,7 @@
                     <td th:text="${user.age}"></td>
                     <td th:text="${user.email}"></td>
                     <td>
-                        <span th:text="${#strings.listJoin(user.sortedRoles.![name.replace('ROLE_', '')], ' ')}"></span>
+                        <span th:text="${user.sortedRoleNames.replace(',', ' ')}"></span>
                     </td>
                 </tr>
                 </tbody>
@@ -480,8 +441,8 @@
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
-                <form id="editForm" th:action="@{/admin/users/edit}" method="post">
-                    <input type="hidden" name="id" id="editUserIdHidden">
+                <form id="editForm">
+                    <input type="hidden" id="editUserIdHidden">
 
                     <div class="mb-3 text-center">
                         <label class="form-label">ID</label>
@@ -490,36 +451,33 @@
 
                     <div class="mb-3">
                         <label class="form-label">First name</label>
-                        <input type="text" class="form-control" name="firstName" id="editFirstName" required>
+                        <input type="text" class="form-control" id="editFirstName" required>
                     </div>
 
                     <div class="mb-3">
                         <label class="form-label">Last name</label>
-                        <input type="text" class="form-control" name="lastName" id="editLastName" required>
+                        <input type="text" class="form-control" id="editLastName" required>
                     </div>
 
                     <div class="mb-3">
                         <label class="form-label">Age</label>
-                        <input type="number" class="form-control" name="age" id="editAge" required>
+                        <input type="number" class="form-control" id="editAge" required>
                     </div>
 
                     <div class="mb-3">
                         <label class="form-label">Email</label>
-                        <input type="email" class="form-control" name="email" id="editEmail" required>
+                        <input type="email" class="form-control" id="editEmail" required>
                     </div>
 
                     <div class="mb-3">
                         <label class="form-label">Password</label>
-                        <input type="password" class="form-control" name="password">
+                        <input type="password" class="form-control" id="editPassword" placeholder="Leave empty to keep current password">
                     </div>
 
                     <div class="mb-3">
                         <label class="form-label">Role</label>
-                        <select class="form-select" name="roleIds" multiple size="3">
-                            <option th:each="role : ${allRoles}"
-                                    th:value="${role.id}"
-                                    th:text="${role.name.replace('ROLE_', '')}">
-                            </option>
+                        <select class="form-select" id="editRoleIds" multiple size="3">
+                            <!-- Roles will be loaded here via JavaScript -->
                         </select>
                     </div>
 
@@ -542,8 +500,8 @@
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
-                <form id="deleteForm" th:action="@{/admin/users/delete}" method="post">
-                    <input type="hidden" name="id" id="deleteUserId">
+                <form id="deleteForm">
+                    <input type="hidden" id="deleteUserId">
 
                     <div class="mb-3 text-center">
                         <label class="form-label">ID</label>
@@ -573,10 +531,7 @@
                     <div class="mb-3">
                         <label class="form-label">Role</label>
                         <select class="form-select" id="deleteRoles" disabled multiple size="3">
-                            <option th:each="role : ${allRoles}"
-                                    th:value="${role.id}"
-                                    th:text="${role.name.replace('ROLE_', '')}">
-                            </option>
+                            <!-- Roles will be loaded here via JavaScript -->
                         </select>
                     </div>
 
@@ -592,61 +547,407 @@
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
 <script>
+    // Global variables
+    let users = [];
+    let roles = [];
+
+    // API functions
+    async function fetchUsers() {
+        try {
+            console.log('Fetching users...');
+            console.log('Making request to /api/admin/users');
+            const response = await fetch('/api/admin/users');
+            console.log('Response received:', response);
+            console.log('Response status:', response.status);
+            console.log('Response ok:', response.ok);
+            
+            if (response.ok) {
+                const data = await response.json();
+                console.log('Raw response data:', data);
+                console.log('Data type:', typeof data);
+                console.log('Data length:', data.length);
+                users = data;
+                console.log('Users array set to:', users);
+                console.log('About to call renderUsersTable()');
+                renderUsersTable();
+                console.log('renderUsersTable() completed');
+            } else {
+                const errorText = await response.text();
+                console.error('Error response:', errorText);
+                showAlert('Error loading users: ' + response.status, 'danger');
+            }
+        } catch (error) {
+            console.error('Error fetching users:', error);
+            showAlert('Error loading users: ' + error.message, 'danger');
+        }
+    }
+
+    async function fetchRoles() {
+        try {
+            console.log('Fetching roles...');
+            const response = await fetch('/api/admin/roles');
+            console.log('Roles response status:', response.status);
+            if (response.ok) {
+                roles = await response.json();
+                console.log('Roles loaded:', roles);
+                populateRoleSelects();
+            } else {
+                const errorText = await response.text();
+                console.error('Error response for roles:', errorText);
+                showAlert('Error loading roles: ' + response.status, 'danger');
+            }
+        } catch (error) {
+            console.error('Error fetching roles:', error);
+            showAlert('Error loading roles: ' + error.message, 'danger');
+        }
+    }
+
+    async function createUser(userData) {
+        try {
+            const response = await fetch('/api/admin/users', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(userData)
+            });
+
+            const result = await response.json();
+            
+            if (result.success) {
+                showAlert(result.message, 'success');
+                await fetchUsers(); // Refresh users list
+                document.getElementById('addUserForm').reset();
+                // Switch back to users table tab
+                showTab('users-table');
+            } else {
+                showAlert(result.message, 'danger');
+            }
+        } catch (error) {
+            console.error('Error creating user:', error);
+            showAlert('Error creating user', 'danger');
+        }
+    }
+
+    async function updateUser(id, userData) {
+        try {
+            const response = await fetch(`/api/admin/users/${id}`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(userData)
+            });
+
+            const result = await response.json();
+            
+            if (result.success) {
+                showAlert(result.message, 'success');
+                await fetchUsers(); // Refresh users list
+                // Switch back to users table tab
+                showTab('users-table');
+            } else {
+                showAlert(result.message, 'danger');
+            }
+        } catch (error) {
+            console.error('Error updating user:', error);
+            showAlert('Error updating user', 'danger');
+        }
+    }
+
+    async function deleteUser(id) {
+        try {
+            const response = await fetch(`/api/admin/users/${id}`, {
+                method: 'DELETE'
+            });
+
+            const result = await response.json();
+            
+            if (result.success) {
+                showAlert(result.message, 'success');
+                await fetchUsers(); // Refresh users list
+                // Switch back to users table tab
+                showTab('users-table');
+            } else {
+                showAlert(result.message, 'danger');
+            }
+        } catch (error) {
+            console.error('Error deleting user:', error);
+            showAlert('Error deleting user', 'danger');
+        }
+    }
+
+    // UI functions
+    function renderUsersTable() {
+        console.log('Rendering users table with', users.length, 'users');
+        console.log('Users data:', users);
+        const tbody = document.getElementById('usersTableBody');
+        console.log('Table body element:', tbody);
+        
+        if (!tbody) {
+            console.error('Table body element not found!');
+            return;
+        }
+        
+        tbody.innerHTML = '';
+
+        if (users.length === 0) {
+            console.log('No users found, showing empty message');
+            tbody.innerHTML = '<tr><td colspan="7" style="text-align: center;">No users found</td></tr>';
+            return;
+        }
+
+        console.log('About to render', users.length, 'user rows');
+
+        users.forEach((user, index) => {
+            console.log(`Processing user ${index + 1}:`, user);
+            const row = document.createElement('tr');
+            // Sort roles so ADMIN comes first
+            const roleNames = user.roles ? user.roles
+                .sort((r1, r2) => {
+                    if (r1.name === 'ROLE_ADMIN' && r2.name === 'ROLE_USER') return -1;
+                    if (r1.name === 'ROLE_USER' && r2.name === 'ROLE_ADMIN') return 1;
+                    return r1.name.localeCompare(r2.name);
+                })
+                .map(role => role.name.replace('ROLE_', ''))
+                .join(' ') : '';
+            
+            console.log(`Role names for user ${index + 1}:`, roleNames);
+            
+            row.innerHTML = `
+                <td>${user.id}</td>
+                <td>${user.firstName}</td>
+                <td>${user.lastName}</td>
+                <td>${user.age}</td>
+                <td>${user.email}</td>
+                <td>${roleNames}</td>
+                <td>
+                    <button class="btn-edit" 
+                            data-bs-toggle="modal" 
+                            data-bs-target="#editModal"
+                            data-user-id="${user.id}"
+                            data-first-name="${user.firstName}"
+                            data-last-name="${user.lastName}"
+                            data-age="${user.age}"
+                            data-email="${user.email}"
+                            data-role-names="${roleNames}">
+                        Edit
+                    </button>
+                </td>
+                <td>
+                    <button class="btn-delete" 
+                            data-bs-toggle="modal" 
+                            data-bs-target="#deleteModal"
+                            data-user-id="${user.id}"
+                            data-first-name="${user.firstName}"
+                            data-last-name="${user.lastName}"
+                            data-age="${user.age}"
+                            data-email="${user.email}"
+                            data-role-names="${roleNames}">
+                        Delete
+                    </button>
+                </td>
+            `;
+            
+            console.log(`Row HTML for user ${index + 1}:`, row.innerHTML);
+            tbody.appendChild(row);
+            console.log(`Row appended for user ${index + 1}`);
+        });
+        
+        console.log('All rows processed. Final tbody innerHTML:', tbody.innerHTML);
+        console.log('Final tbody children count:', tbody.children.length);
+        console.log('Final tbody children:', tbody.children);
+        
+        // Проверим CSS стили таблицы
+        const table = document.querySelector('table');
+        if (table) {
+            console.log('Table element found:', table);
+            console.log('Table display:', window.getComputedStyle(table).display);
+            console.log('Table visibility:', window.getComputedStyle(table).visibility);
+            console.log('Table height:', window.getComputedStyle(table).height);
+        }
+        
+        // Проверим CSS стили tbody
+        console.log('Tbody display:', window.getComputedStyle(tbody).display);
+        console.log('Tbody visibility:', window.getComputedStyle(tbody).visibility);
+        console.log('Tbody height:', window.getComputedStyle(tbody).height);
+        
+        // Проверим CSS стили строк
+        const rows = tbody.querySelectorAll('tr');
+        console.log('Number of rows found:', rows.length);
+        rows.forEach((row, index) => {
+            console.log(`Row ${index + 1} display:`, window.getComputedStyle(row).display);
+            console.log(`Row ${index + 1} visibility:`, window.getComputedStyle(row).visibility);
+            console.log(`Row ${index + 1} height:`, window.getComputedStyle(row).height);
+        });
+        
+        // Проверим CSS стили ячеек
+        const cells = tbody.querySelectorAll('td');
+        console.log('Number of cells found:', cells.length);
+        if (cells.length > 0) {
+            console.log(`First cell display:`, window.getComputedStyle(cells[0]).display);
+            console.log(`First cell visibility:`, window.getComputedStyle(cells[0]).visibility);
+            console.log(`First cell height:`, window.getComputedStyle(cells[0]).height);
+        }
+        
+        // Проверим, есть ли CSS проблемы с контейнером таблицы
+        const tableContainer = document.querySelector('.table-responsive');
+        if (tableContainer) {
+            console.log('Table container found:', tableContainer);
+            console.log('Table container display:', window.getComputedStyle(tableContainer).display);
+            console.log('Table container visibility:', window.getComputedStyle(tableContainer).visibility);
+            console.log('Table container height:', window.getComputedStyle(tableContainer).height);
+        }
+        
+        // Проверим, есть ли CSS проблемы с секцией таблицы
+        const tableSection = document.querySelector('.user-info');
+        if (tableSection) {
+            console.log('Table section found:', tableSection);
+            console.log('Table section display:', window.getComputedStyle(tableSection).display);
+            console.log('Table section visibility:', window.getComputedStyle(tableSection).visibility);
+            console.log('Table section height:', window.getComputedStyle(tableSection).height);
+        }
+    }
+
+    function populateRoleSelects() {
+        const selects = ['addRoleIds', 'editRoleIds', 'deleteRoles'];
+        
+        selects.forEach(selectId => {
+            const select = document.getElementById(selectId);
+            if (select) {
+                select.innerHTML = '';
+                roles.forEach(role => {
+                    const option = document.createElement('option');
+                    option.value = role.id;
+                    option.textContent = role.name.replace('ROLE_', '');
+                    select.appendChild(option);
+                });
+            }
+        });
+    }
+
+    function showAlert(message, type) {
+        // Remove existing alerts
+        const existingAlerts = document.querySelectorAll('.alert');
+        existingAlerts.forEach(alert => alert.remove());
+
+        // Create new alert
+        const alertDiv = document.createElement('div');
+        alertDiv.className = `alert alert-${type}`;
+        alertDiv.textContent = message;
+
+        // Insert at the top of main content
+        const mainContent = document.querySelector('.main-content');
+        const firstChild = mainContent.firstElementChild;
+        mainContent.insertBefore(alertDiv, firstChild);
+
+        // Auto remove after 5 seconds
+        setTimeout(() => {
+            if (alertDiv.parentNode) {
+                alertDiv.remove();
+            }
+        }, 5000);
+    }
     
+    function initializeActiveStates() {
+        // Ensure proper initial active states
+        console.log('Initializing active states...');
+        
+        // Set admin link as active by default
+        const adminLink = document.querySelector('.tab-link[onclick*="showAdminTab()"]');
+        if (adminLink) {
+            adminLink.classList.add('active');
+        }
+        
+        // Set users table tab as active by default
+        const usersTableTab = document.querySelector('.tab[onclick*="showTab(\'users-table\')"]');
+        if (usersTableTab) {
+            usersTableTab.classList.add('active');
+        }
+        
+        // Show users table content by default
+        const usersTable = document.getElementById('users-table');
+        if (usersTable) {
+            usersTable.style.display = 'block';
+            usersTable.classList.add('active');
+        }
+        
+        console.log('Active states initialized');
+    }
     
     function showTab(tabName) {
+        // Hide all tab contents
         document.querySelectorAll('.tab-content').forEach(content => {
             content.style.display = 'none';
             content.classList.remove('active');
         });
+        
+        // Remove active class from all tabs
         document.querySelectorAll('.tab').forEach(tab => tab.classList.remove('active'));
 
+        // Show the selected tab content
         const tab = document.getElementById(tabName);
         if (tab) {
             tab.style.display = 'block';
             tab.classList.add('active');
         }
 
+        // Set the corresponding tab button as active
+        const tabButton = document.querySelector(`.tab[onclick*="showTab('${tabName}')"]`);
+        if (tabButton) {
+            tabButton.classList.add('active');
+        }
+
+        // If this was called from a click event, make sure the clicked tab is active
         if (event?.target?.classList.contains('tab')) {
             event.target.classList.add('active');
         }
     }
 
     function showAdminTab() {
+        // Remove active class from all sidebar links
         document.querySelectorAll('.tab-link').forEach(link => link.classList.remove('active'));
         
-        // Устанавливаем активную вкладку в боковой панели
-        const adminLink = document.querySelector('.tab-link[onclick="showAdminTab()"]');
+        // Set admin link as active
+        const adminLink = document.querySelector('.tab-link[onclick*="showAdminTab()"]');
         if (adminLink) adminLink.classList.add('active');
 
+        // Hide all tab contents
         document.querySelectorAll('.tab-content').forEach(content => {
             content.style.display = 'none';
             content.classList.remove('active');
         });
 
+        // Show users table
         const usersTable = document.getElementById('users-table');
         if (usersTable) {
             usersTable.style.display = 'block';
             usersTable.classList.add('active');
         }
 
+        // Remove active class from all tab buttons
         document.querySelectorAll('.tab').forEach(tab => tab.classList.remove('active'));
-        const tabButton = document.querySelector('.tab[onclick="showTab(\'users-table\')"]');
+        
+        // Set users table tab button as active
+        const tabButton = document.querySelector('.tab[onclick*="showTab(\'users-table\')"]');
         if (tabButton) tabButton.classList.add('active');
     }
 
     function showUserTab() {
+        // Remove active class from all sidebar links
         document.querySelectorAll('.tab-link').forEach(link => link.classList.remove('active'));
         
-        // Устанавливаем активную вкладку в боковой панели
-        const userLink = document.querySelector('.tab-link[onclick="showUserTab()"]');
+        // Set user link as active
+        const userLink = document.querySelector('.tab-link[onclick*="showUserTab()"]');
         if (userLink) userLink.classList.add('active');
 
+        // Hide all tab contents
         document.querySelectorAll('.tab-content').forEach(content => {
             content.style.display = 'none';
             content.classList.remove('active');
         });
 
+        // Show user info
         const userInfo = document.getElementById('user-info');
         if (userInfo) {
             userInfo.style.display = 'block';
@@ -654,44 +955,118 @@
         }
     }
 
+    // Event listeners
     document.addEventListener('DOMContentLoaded', function () {
+        console.log('DOM loaded, initializing...');
+        console.log('Current URL:', window.location.href);
+        console.log('User authenticated:', document.querySelector('.user-email')?.textContent);
+        
+        // Prevent any form from causing page reload
+        document.addEventListener('submit', function(e) {
+            if (e.target.tagName === 'FORM') {
+                e.preventDefault();
+                console.log('Form submission prevented to avoid page reload');
+            }
+        });
+        
+        // Simple test to verify JavaScript is working
+        console.log('JavaScript is working!');
+        console.log('Document ready state:', document.readyState);
+        
+        // Test if we can find the table body
+        const tbody = document.getElementById('usersTableBody');
+        console.log('Table body element found:', tbody);
+        
+        // Initialize active states
+        initializeActiveStates();
         showAdminTab();
 
+        // Load initial data
+        console.log('Loading initial data...');
+        console.log('About to call fetchUsers()');
+        fetchUsers();
+        console.log('About to call fetchRoles()');
+        fetchRoles();
+
+        // Add user form
+        document.getElementById('addUserForm').addEventListener('submit', async function(e) {
+            e.preventDefault(); // Prevent page reload
+            e.stopPropagation(); // Stop event bubbling
+
+            const userData = {
+                firstName: document.getElementById('addFirstName').value,
+                lastName: document.getElementById('addLastName').value,
+                age: parseInt(document.getElementById('addAge').value),
+                email: document.getElementById('addEmail').value,
+                password: document.getElementById('addPassword').value,
+                roleIds: Array.from(document.getElementById('addRoleIds').selectedOptions).map(option => parseInt(option.value))
+            };
+
+            await createUser(userData);
+            return false; // Additional protection against page reload
+        });
+
+        // Edit user form
+        document.getElementById('editForm').addEventListener('submit', async function(e) {
+            e.preventDefault(); // Prevent page reload
+            e.stopPropagation(); // Stop event bubbling
+            
+            const userId = document.getElementById('editUserIdHidden').value;
+            const userData = {
+                firstName: document.getElementById('editFirstName').value,
+                lastName: document.getElementById('editLastName').value,
+                age: parseInt(document.getElementById('editAge').value),
+                email: document.getElementById('editEmail').value,
+                password: document.getElementById('editPassword').value,
+                roleIds: Array.from(document.getElementById('editRoleIds').selectedOptions).map(option => parseInt(option.value))
+            };
+
+            await updateUser(userId, userData);
+            
+            // Close modal
+            const editModal = bootstrap.Modal.getInstance(document.getElementById('editModal'));
+            editModal.hide();
+            return false; // Additional protection against page reload
+        });
+
+        // Delete user form
+        document.getElementById('deleteForm').addEventListener('submit', async function(e) {
+            e.preventDefault(); // Prevent page reload
+            e.stopPropagation(); // Stop event bubbling
+            
+            const userId = document.getElementById('deleteUserId').value;
+            await deleteUser(userId);
+            
+            // Close modal
+            const deleteModal = bootstrap.Modal.getInstance(document.getElementById('deleteModal'));
+            deleteModal.hide();
+            return false; // Additional protection against page reload
+        });
+
+        // Edit button click handler
         document.addEventListener('click', function (event) {
-            const target = event.target;
-
-            if (target.classList.contains('btn-edit')) {
-
+            if (event.target.classList.contains('btn-edit')) {
                 const userData = {
-                    userId: target.getAttribute('data-user-id'),
-                    firstName: target.getAttribute('data-first-name'),
-                    lastName: target.getAttribute('data-last-name'),
-                    age: target.getAttribute('data-age'),
-                    email: target.getAttribute('data-email'),
-                    roleNamesStr: target.getAttribute('data-role-names') || ''
+                    userId: event.target.getAttribute('data-user-id'),
+                    firstName: event.target.getAttribute('data-first-name'),
+                    lastName: event.target.getAttribute('data-last-name'),
+                    age: event.target.getAttribute('data-age'),
+                    email: event.target.getAttribute('data-email'),
+                    roleNamesStr: event.target.getAttribute('data-role-names') || ''
                 };
 
+                // Populate edit form
+                document.getElementById('editUserIdHidden').value = userData.userId;
+                document.getElementById('editUserIdField').value = userData.userId;
+                document.getElementById('editFirstName').value = userData.firstName;
+                document.getElementById('editLastName').value = userData.lastName;
+                document.getElementById('editAge').value = userData.age;
+                document.getElementById('editEmail').value = userData.email;
+                document.getElementById('editPassword').value = '';
 
-                const hiddenField = document.getElementById('editUserIdHidden');
-                const idField = document.getElementById('editUserIdField');
-                const firstNameField = document.getElementById('editFirstName');
-                const lastNameField = document.getElementById('editLastName');
-                const ageField = document.getElementById('editAge');
-                const emailField = document.getElementById('editEmail');
-                
-
-
-                if (hiddenField) hiddenField.value = userData.userId || '';
-                if (idField) idField.value = userData.userId || '';
-                if (firstNameField) firstNameField.value = userData.firstName || '';
-                if (lastNameField) lastNameField.value = userData.lastName || '';
-                if (ageField) ageField.value = userData.age || '';
-                if (emailField) emailField.value = userData.email || '';
-                
-
-
-                const roleNames = userData.roleNamesStr.split(',').map(r => r.trim());
-                const select = document.querySelector('#editModal select[name="roleIds"]');
+                // Set roles
+                const roleNames = userData.roleNamesStr.split(' ').map(r => r.trim()).filter(r => r);
+                const select = document.getElementById('editRoleIds');
                 if (select) {
                     Array.from(select.options).forEach(option => {
                         option.selected = roleNames.includes(option.textContent.trim());
@@ -699,37 +1074,26 @@
                 }
             }
 
-            if (target.classList.contains('btn-delete')) {
-
+            if (event.target.classList.contains('btn-delete')) {
                 const userData = {
-                    userId: target.getAttribute('data-user-id'),
-                    firstName: target.getAttribute('data-first-name'),
-                    lastName: target.getAttribute('data-last-name'),
-                    age: target.getAttribute('data-age'),
-                    email: target.getAttribute('data-email'),
-                    roleNamesStr: target.getAttribute('data-role-names') || ''
+                    userId: event.target.getAttribute('data-user-id'),
+                    firstName: event.target.getAttribute('data-first-name'),
+                    lastName: event.target.getAttribute('data-last-name'),
+                    age: event.target.getAttribute('data-age'),
+                    email: event.target.getAttribute('data-email'),
+                    roleNamesStr: event.target.getAttribute('data-role-names') || ''
                 };
 
+                // Populate delete form
+                document.getElementById('deleteUserId').value = userData.userId;
+                document.getElementById('deleteUserIdField').value = userData.userId;
+                document.getElementById('deleteFirstName').value = userData.firstName;
+                document.getElementById('deleteLastName').value = userData.lastName;
+                document.getElementById('deleteAge').value = userData.age;
+                document.getElementById('deleteEmail').value = userData.email;
 
-                const deleteUserId = document.getElementById('deleteUserId');
-                const deleteUserIdField = document.getElementById('deleteUserIdField');
-                const deleteFirstName = document.getElementById('deleteFirstName');
-                const deleteLastName = document.getElementById('deleteLastName');
-                const deleteAge = document.getElementById('deleteAge');
-                const deleteEmail = document.getElementById('deleteEmail');
-                
-
-
-                if (deleteUserId) deleteUserId.value = userData.userId || '';
-                if (deleteUserIdField) deleteUserIdField.value = userData.userId || '';
-                if (deleteFirstName) deleteFirstName.value = userData.firstName || '';
-                if (deleteLastName) deleteLastName.value = userData.lastName || '';
-                if (deleteAge) deleteAge.value = userData.age || '';
-                if (deleteEmail) deleteEmail.value = userData.email || '';
-                
-
-
-                const roleNames = userData.roleNamesStr.split(',').map(r => r.trim());
+                // Set roles
+                const roleNames = userData.roleNamesStr.split(' ').map(r => r.trim()).filter(r => r);
                 const select = document.getElementById('deleteRoles');
                 if (select) {
                     Array.from(select.options).forEach(option => {

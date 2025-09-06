@@ -37,7 +37,7 @@ public class DataInitializer implements CommandLineRunner {
             admin.setPassword(passwordEncoder.encode("admin"));
             admin.setAge(30);
             admin.setFirstName("Admin");
-            admin.setLastName("User");
+            admin.setLastName("Admin");
 
             Set<Role> roles = new HashSet<>();
             Role adminRole = roleService.getRoleByName("ROLE_ADMIN");

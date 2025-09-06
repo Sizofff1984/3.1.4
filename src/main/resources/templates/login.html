@@ -68,7 +68,7 @@
         <strong>Invalid username or password</strong>
     </div>
 
-    <form th:action="@{/perform_login}" method="post">
+    <form th:action="@{/perform_login}" method="post" id="loginForm">
         <div class="mb-3">
             <input type="email" class="form-control" id="email" name="email"
                    placeholder="Email address" required>
@@ -81,8 +81,45 @@
 
         <button type="submit" class="btn btn-primary w-100">Sign in</button>
     </form>
+    
+    <div id="errorMessage" class="alert alert-danger mt-3" style="display: none;">
+        <strong>Login failed!</strong> <span id="errorText"></span>
+    </div>
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+    // Handle login form submission with loading state
+    document.addEventListener('DOMContentLoaded', function() {
+        const loginForm = document.getElementById('loginForm');
+        
+        if (loginForm) {
+            console.log('Login form found, adding event listener');
+            loginForm.addEventListener('submit', function(e) {
+                console.log('Form submitted!');
+                
+                const submitButton = this.querySelector('button[type="submit"]');
+                
+                // Show loading state
+                if (submitButton) {
+                    submitButton.disabled = true;
+                    submitButton.textContent = 'Signing in...';
+                }
+                
+                // Allow normal form submission for Spring Security
+                // The page will redirect after successful authentication
+                console.log('Allowing normal form submission for Spring Security');
+            });
+        }
+        
+        // Prevent any other forms from causing page reload
+        document.addEventListener('submit', function(e) {
+            if (e.target.id !== 'loginForm') {
+                e.preventDefault();
+                console.log('Form submission prevented to avoid page reload');
+            }
+        });
+    });
+</script>
 </body>
 </html>

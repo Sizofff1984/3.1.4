@@ -137,14 +137,14 @@
 </div>
 
 <div class="sidebar">
-    <a href="#" class="tab-link active">User</a>
+    <a href="javascript:void(0)" class="tab-link active">User</a>
 </div>
 
 <div class="main-content">
     <h1>User page</h1>
     
     <div class="table-container">
-        <table class="table">
+        <table class="table" id="userProfileTable">
             <thead>
             <tr>
                 <th>ID</th>
@@ -155,26 +155,69 @@
                 <th>Role</th>
             </tr>
             </thead>
-            <tbody>
-            <tr th:if="${user != null}">
-                <td th:text="${user.id}"></td>
-                <td th:text="${user.firstName}"></td>
-                <td th:text="${user.lastName}"></td>
-                <td th:text="${user.age}"></td>
-                <td th:text="${user.email}"></td>
-                <td>
-                    <span th:text="${#strings.listJoin(user.roles.![name.replace('ROLE_', '')], ' ')}">
-                    </span>
-                </td>
-            </tr>
-            <tr th:if="${user == null}">
-                <td colspan="6" style="text-align: center; color: red;">
-                    Пользователь не найден! Email: <span th:text="${#authentication.name}"></span>
-                </td>
-            </tr>
+            <tbody id="userProfileTableBody">
+                <!-- User data will be loaded here via JavaScript -->
             </tbody>
         </table>
     </div>
 </div>
+
+<script>
+    // Load user profile data
+    async function loadUserProfile() {
+        try {
+            const response = await fetch('/api/user/profile');
+            if (response.ok) {
+                const user = await response.json();
+                renderUserProfile(user);
+            } else {
+                showError('Error loading user profile');
+            }
+        } catch (error) {
+            console.error('Error fetching user profile:', error);
+            showError('Error loading user profile');
+        }
+    }
+
+    function renderUserProfile(user) {
+        const tbody = document.getElementById('userProfileTableBody');
+        const roleNames = user.roles ? user.roles.map(role => role.name.replace('ROLE_', '')).join(' ') : '';
+        
+        tbody.innerHTML = `
+            <tr>
+                <td>${user.id}</td>
+                <td>${user.firstName}</td>
+                <td>${user.lastName}</td>
+                <td>${user.age}</td>
+                <td>${user.email}</td>
+                <td>${roleNames}</td>
+            </tr>
+        `;
+    }
+
+    function showError(message) {
+        const tbody = document.getElementById('userProfileTableBody');
+        tbody.innerHTML = `
+            <tr>
+                <td colspan="6" style="text-align: center; color: red;">
+                    ${message}
+                </td>
+            </tr>
+        `;
+    }
+
+    // Load profile when page loads
+    document.addEventListener('DOMContentLoaded', function() {
+        // Prevent any form from causing page reload
+        document.addEventListener('submit', function(e) {
+            if (e.target.tagName === 'FORM') {
+                e.preventDefault();
+                console.log('Form submission prevented to avoid page reload');
+            }
+        });
+        
+        loadUserProfile();
+    });
+</script>
 </body>
 </html>

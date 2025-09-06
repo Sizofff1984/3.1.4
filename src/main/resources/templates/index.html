@@ -92,7 +92,7 @@
             </div>
 
             <div sec:authorize="isAuthenticated()" class="text-center mt-4">
-                <form th:action="@{/perform_logout}" method="post">
+                <form th:action="@{/perform_logout}" method="post" id="logoutForm">
                     <button type="submit" class="btn btn-danger">Logout</button>
                 </form>
             </div>
@@ -101,5 +101,38 @@
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+    // Handle forms and prevent page reload
+    document.addEventListener('DOMContentLoaded', function() {
+        const logoutForm = document.getElementById('logoutForm');
+        
+        if (logoutForm) {
+            logoutForm.addEventListener('submit', function(e) {
+                // Allow normal form submission for logout
+                // This is necessary for Spring Security logout
+                console.log('Logout form submitted - allowing normal submission');
+                // Don't prevent default - let Spring Security handle logout
+            });
+        }
+        
+        // Prevent any other forms from causing page reload (if any exist)
+        document.addEventListener('submit', function(e) {
+            if (e.target.id !== 'logoutForm') {
+                e.preventDefault();
+                console.log('Non-logout form submission prevented to avoid page reload');
+            }
+        });
+        
+        // Make all links safe (prevent accidental navigation)
+        document.querySelectorAll('a[href]').forEach(link => {
+            if (link.href && !link.href.startsWith('javascript:') && !link.href.includes('logout')) {
+                link.addEventListener('click', function(e) {
+                    // Allow normal navigation for legitimate links
+                    console.log('Navigation to:', this.href);
+                });
+            }
+        });
+    });
+</script>
 </body>
 </html>
