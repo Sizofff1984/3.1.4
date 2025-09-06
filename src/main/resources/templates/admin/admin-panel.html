@@ -554,50 +554,32 @@
     // API functions
     async function fetchUsers() {
         try {
-            console.log('Fetching users...');
-            console.log('Making request to /api/admin/users');
             const response = await fetch('/api/admin/users');
-            console.log('Response received:', response);
-            console.log('Response status:', response.status);
-            console.log('Response ok:', response.ok);
             
             if (response.ok) {
                 const data = await response.json();
-                console.log('Raw response data:', data);
-                console.log('Data type:', typeof data);
-                console.log('Data length:', data.length);
                 users = data;
-                console.log('Users array set to:', users);
-                console.log('About to call renderUsersTable()');
                 renderUsersTable();
-                console.log('renderUsersTable() completed');
             } else {
                 const errorText = await response.text();
-                console.error('Error response:', errorText);
                 showAlert('Error loading users: ' + response.status, 'danger');
             }
         } catch (error) {
-            console.error('Error fetching users:', error);
             showAlert('Error loading users: ' + error.message, 'danger');
         }
     }
 
     async function fetchRoles() {
         try {
-            console.log('Fetching roles...');
             const response = await fetch('/api/admin/roles');
-            console.log('Roles response status:', response.status);
             if (response.ok) {
                 roles = await response.json();
-                console.log('Roles loaded:', roles);
                 populateRoleSelects();
             } else {
                 const errorText = await response.text();
-                console.error('Error response for roles:', errorText);
                 showAlert('Error loading roles: ' + response.status, 'danger');
             }
         } catch (error) {
-            console.error('Error fetching roles:', error);
             showAlert('Error loading roles: ' + error.message, 'danger');
         }
     }
@@ -679,28 +661,20 @@
 
     // UI functions
     function renderUsersTable() {
-        console.log('Rendering users table with', users.length, 'users');
-        console.log('Users data:', users);
         const tbody = document.getElementById('usersTableBody');
-        console.log('Table body element:', tbody);
         
         if (!tbody) {
-            console.error('Table body element not found!');
             return;
         }
         
         tbody.innerHTML = '';
 
         if (users.length === 0) {
-            console.log('No users found, showing empty message');
             tbody.innerHTML = '<tr><td colspan="7" style="text-align: center;">No users found</td></tr>';
             return;
         }
 
-        console.log('About to render', users.length, 'user rows');
-
         users.forEach((user, index) => {
-            console.log(`Processing user ${index + 1}:`, user);
             const row = document.createElement('tr');
             // Sort roles so ADMIN comes first
             const roleNames = user.roles ? user.roles
@@ -711,8 +685,6 @@
                 })
                 .map(role => role.name.replace('ROLE_', ''))
                 .join(' ') : '';
-            
-            console.log(`Role names for user ${index + 1}:`, roleNames);
             
             row.innerHTML = `
                 <td>${user.id}</td>
@@ -749,64 +721,8 @@
                 </td>
             `;
             
-            console.log(`Row HTML for user ${index + 1}:`, row.innerHTML);
             tbody.appendChild(row);
-            console.log(`Row appended for user ${index + 1}`);
         });
-        
-        console.log('All rows processed. Final tbody innerHTML:', tbody.innerHTML);
-        console.log('Final tbody children count:', tbody.children.length);
-        console.log('Final tbody children:', tbody.children);
-        
-        // Проверим CSS стили таблицы
-        const table = document.querySelector('table');
-        if (table) {
-            console.log('Table element found:', table);
-            console.log('Table display:', window.getComputedStyle(table).display);
-            console.log('Table visibility:', window.getComputedStyle(table).visibility);
-            console.log('Table height:', window.getComputedStyle(table).height);
-        }
-        
-        // Проверим CSS стили tbody
-        console.log('Tbody display:', window.getComputedStyle(tbody).display);
-        console.log('Tbody visibility:', window.getComputedStyle(tbody).visibility);
-        console.log('Tbody height:', window.getComputedStyle(tbody).height);
-        
-        // Проверим CSS стили строк
-        const rows = tbody.querySelectorAll('tr');
-        console.log('Number of rows found:', rows.length);
-        rows.forEach((row, index) => {
-            console.log(`Row ${index + 1} display:`, window.getComputedStyle(row).display);
-            console.log(`Row ${index + 1} visibility:`, window.getComputedStyle(row).visibility);
-            console.log(`Row ${index + 1} height:`, window.getComputedStyle(row).height);
-        });
-        
-        // Проверим CSS стили ячеек
-        const cells = tbody.querySelectorAll('td');
-        console.log('Number of cells found:', cells.length);
-        if (cells.length > 0) {
-            console.log(`First cell display:`, window.getComputedStyle(cells[0]).display);
-            console.log(`First cell visibility:`, window.getComputedStyle(cells[0]).visibility);
-            console.log(`First cell height:`, window.getComputedStyle(cells[0]).height);
-        }
-        
-        // Проверим, есть ли CSS проблемы с контейнером таблицы
-        const tableContainer = document.querySelector('.table-responsive');
-        if (tableContainer) {
-            console.log('Table container found:', tableContainer);
-            console.log('Table container display:', window.getComputedStyle(tableContainer).display);
-            console.log('Table container visibility:', window.getComputedStyle(tableContainer).visibility);
-            console.log('Table container height:', window.getComputedStyle(tableContainer).height);
-        }
-        
-        // Проверим, есть ли CSS проблемы с секцией таблицы
-        const tableSection = document.querySelector('.user-info');
-        if (tableSection) {
-            console.log('Table section found:', tableSection);
-            console.log('Table section display:', window.getComputedStyle(tableSection).display);
-            console.log('Table section visibility:', window.getComputedStyle(tableSection).visibility);
-            console.log('Table section height:', window.getComputedStyle(tableSection).height);
-        }
     }
 
     function populateRoleSelects() {
@@ -850,9 +766,6 @@
     }
     
     function initializeActiveStates() {
-        // Ensure proper initial active states
-        console.log('Initializing active states...');
-        
         // Set admin link as active by default
         const adminLink = document.querySelector('.tab-link[onclick*="showAdminTab()"]');
         if (adminLink) {
@@ -871,8 +784,6 @@
             usersTable.style.display = 'block';
             usersTable.classList.add('active');
         }
-        
-        console.log('Active states initialized');
     }
     
     function showTab(tabName) {
@@ -957,35 +868,19 @@
 
     // Event listeners
     document.addEventListener('DOMContentLoaded', function () {
-        console.log('DOM loaded, initializing...');
-        console.log('Current URL:', window.location.href);
-        console.log('User authenticated:', document.querySelector('.user-email')?.textContent);
-        
         // Prevent any form from causing page reload
         document.addEventListener('submit', function(e) {
             if (e.target.tagName === 'FORM') {
                 e.preventDefault();
-                console.log('Form submission prevented to avoid page reload');
             }
         });
-        
-        // Simple test to verify JavaScript is working
-        console.log('JavaScript is working!');
-        console.log('Document ready state:', document.readyState);
-        
-        // Test if we can find the table body
-        const tbody = document.getElementById('usersTableBody');
-        console.log('Table body element found:', tbody);
         
         // Initialize active states
         initializeActiveStates();
         showAdminTab();
 
         // Load initial data
-        console.log('Loading initial data...');
-        console.log('About to call fetchUsers()');
         fetchUsers();
-        console.log('About to call fetchRoles()');
         fetchRoles();
 
         // Add user form

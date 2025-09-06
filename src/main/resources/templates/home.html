@@ -27,16 +27,11 @@
                     });
                     
                     if (response.ok) {
-                        // Logout successful - redirect to login page
                         window.location.href = '/login';
                     } else {
-                        console.error('Logout failed');
-                        // Still redirect to login page
                         window.location.href = '/login';
                     }
                 } catch (error) {
-                    console.error('Logout error:', error);
-                    // Still redirect to login page
                     window.location.href = '/login';
                 }
             });
@@ -45,7 +40,6 @@
         // Prevent any forms from causing page reload
         document.addEventListener('submit', function(e) {
             e.preventDefault();
-            console.log('Form submission prevented to avoid page reload');
         });
     });
 </script>

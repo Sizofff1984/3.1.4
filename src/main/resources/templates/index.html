@@ -110,8 +110,6 @@
             logoutForm.addEventListener('submit', function(e) {
                 // Allow normal form submission for logout
                 // This is necessary for Spring Security logout
-                console.log('Logout form submitted - allowing normal submission');
-                // Don't prevent default - let Spring Security handle logout
             });
         }
         
@@ -119,7 +117,6 @@
         document.addEventListener('submit', function(e) {
             if (e.target.id !== 'logoutForm') {
                 e.preventDefault();
-                console.log('Non-logout form submission prevented to avoid page reload');
             }
         });
         
@@ -128,7 +125,6 @@
             if (link.href && !link.href.startsWith('javascript:') && !link.href.includes('logout')) {
                 link.addEventListener('click', function(e) {
                     // Allow normal navigation for legitimate links
-                    console.log('Navigation to:', this.href);
                 });
             }
         });

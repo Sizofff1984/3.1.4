@@ -94,10 +94,7 @@
         const loginForm = document.getElementById('loginForm');
         
         if (loginForm) {
-            console.log('Login form found, adding event listener');
             loginForm.addEventListener('submit', function(e) {
-                console.log('Form submitted!');
-                
                 const submitButton = this.querySelector('button[type="submit"]');
                 
                 // Show loading state
@@ -108,7 +105,6 @@
                 
                 // Allow normal form submission for Spring Security
                 // The page will redirect after successful authentication
-                console.log('Allowing normal form submission for Spring Security');
             });
         }
         
@@ -116,7 +112,6 @@
         document.addEventListener('submit', function(e) {
             if (e.target.id !== 'loginForm') {
                 e.preventDefault();
-                console.log('Form submission prevented to avoid page reload');
             }
         });
     });

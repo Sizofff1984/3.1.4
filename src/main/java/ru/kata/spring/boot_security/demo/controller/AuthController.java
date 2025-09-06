@@ -36,8 +36,6 @@ public class AuthController {
             String email = loginRequest.get("email");
             String password = loginRequest.get("password");
             
-            System.out.println("Attempting login for email: " + email);
-            
             // Authenticate user
             Authentication authentication = authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(email, password)
@@ -48,8 +46,6 @@ public class AuthController {
                 .map(GrantedAuthority::getAuthority)
                 .collect(Collectors.toList());
             
-            System.out.println("Login successful for email: " + email + " with roles: " + roles);
-            
             response.put("success", true);
             response.put("message", "Login successful");
             response.put("roles", roles);
@@ -58,13 +54,10 @@ public class AuthController {
             return ResponseEntity.ok(response);
             
         } catch (AuthenticationException e) {
-            System.out.println("Authentication failed: " + e.getMessage());
             response.put("success", false);
             response.put("message", "Invalid email or password");
             return ResponseEntity.status(401).body(response);
         } catch (Exception e) {
-            System.out.println("Login error: " + e.getMessage());
-            e.printStackTrace();
             response.put("success", false);
             response.put("message", "Login failed: " + e.getMessage());
             return ResponseEntity.status(500).body(response);
