@@ -20,14 +20,7 @@ public class UserRestController {
 
     @GetMapping("/profile")
     public ResponseEntity<User> getUserProfile(Authentication authentication) {
-        if (authentication != null && authentication.isAuthenticated()) {
-            String email = authentication.getName();
-            User user = userService.getUserByEmail(email);
-            if (user != null) {
-                return ResponseEntity.ok(user);
-            }
-        }
-        return ResponseEntity.notFound().build();
+        return userService.getCurrentUserWithResponse(authentication);
     }
 }
 

@@ -9,10 +9,8 @@ import ru.kata.spring.boot_security.demo.model.User;
 import ru.kata.spring.boot_security.demo.service.RoleService;
 import ru.kata.spring.boot_security.demo.service.UserService;
 
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/admin")
@@ -29,18 +27,12 @@ public class AdminRestController {
 
     @GetMapping("/users")
     public ResponseEntity<List<User>> getAllUsers() {
-        List<User> users = userService.getAllUsers();
-        return ResponseEntity.ok(users);
+        return userService.getAllUsersWithResponse();
     }
 
     @GetMapping("/users/{id}")
     public ResponseEntity<User> getUserById(@PathVariable Long id) {
-        User user = userService.getUserById(id);
-        if (user != null) {
-            return ResponseEntity.ok(user);
-        } else {
-            return ResponseEntity.notFound().build();
-        }
+        return userService.getUserByIdWithResponse(id);
     }
 
     @PostMapping("/users")
@@ -60,19 +52,11 @@ public class AdminRestController {
 
     @GetMapping("/roles")
     public ResponseEntity<List<Role>> getAllRoles() {
-        List<Role> roles = roleService.getAllRoles();
-        return ResponseEntity.ok(roles);
+        return roleService.getAllRolesWithResponse();
     }
 
     @GetMapping("/current-user")
     public ResponseEntity<User> getCurrentUser(Authentication authentication) {
-        if (authentication != null && authentication.isAuthenticated()) {
-            String email = authentication.getName();
-            User user = userService.getUserByEmail(email);
-            if (user != null) {
-                return ResponseEntity.ok(user);
-            }
-        }
-        return ResponseEntity.notFound().build();
+        return userService.getCurrentUserWithResponse(authentication);
     }
 }

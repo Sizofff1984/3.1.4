@@ -111,6 +111,43 @@ public class UserServiceImpl implements UserService {
 
 
     @Override
+    @Transactional(readOnly = true)
+    public ResponseEntity<List<User>> getAllUsersWithResponse() {
+        try {
+            List<User> users = getAllUsers();
+            return ResponseEntity.ok(users);
+        } catch (Exception e) {
+            return ResponseEntity.internalServerError().build();
+        }
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public ResponseEntity<User> getUserByIdWithResponse(Long id) {
+        try {
+            User user = getUserById(id);
+            return ResponseEntity.ok(user);
+        } catch (Exception e) {
+            return ResponseEntity.notFound().build();
+        }
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public ResponseEntity<User> getCurrentUserWithResponse(org.springframework.security.core.Authentication authentication) {
+        try {
+            if (authentication != null && authentication.isAuthenticated()) {
+                String email = authentication.getName();
+                User user = getUserByEmail(email);
+                return ResponseEntity.ok(user);
+            }
+            return ResponseEntity.notFound().build();
+        } catch (Exception e) {
+            return ResponseEntity.notFound().build();
+        }
+    }
+
+    @Override
     @Transactional
     public ResponseEntity<Map<String, Object>> createUserWithResponse(Map<String, Object> userData) {
         try {
