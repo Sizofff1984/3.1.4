@@ -1,6 +1,5 @@
 package ru.kata.spring.boot_security.demo.service;
 
-import org.springframework.http.ResponseEntity;
 import ru.kata.spring.boot_security.demo.model.Role;
 import ru.kata.spring.boot_security.demo.model.User;
 
@@ -17,10 +16,8 @@ public interface UserService {
     void deleteUser(Long id);
     
     // REST API methods
-    ResponseEntity<List<User>> getAllUsersWithResponse();
-    ResponseEntity<User> getUserByIdWithResponse(Long id);
-    ResponseEntity<Map<String, Object>> createUserWithResponse(Map<String, Object> userData);
-    ResponseEntity<Map<String, Object>> updateUserWithResponse(Long id, Map<String, Object> userData);
-    ResponseEntity<Map<String, Object>> deleteUserWithResponse(Long id);
-    ResponseEntity<User> getCurrentUserWithResponse(org.springframework.security.core.Authentication authentication);
+    Map<String, Object> createUserWithResponse(Map<String, Object> userData);
+    Map<String, Object> updateUserWithResponse(Long id, Map<String, Object> userData);
+    Map<String, Object> deleteUserWithResponse(Long id);
+    User getCurrentUserWithResponse(org.springframework.security.core.Authentication authentication);
 }

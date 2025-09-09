@@ -1,6 +1,5 @@
 package ru.kata.spring.boot_security.demo.service;
 
-import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -112,44 +111,17 @@ public class UserServiceImpl implements UserService {
 
     @Override
     @Transactional(readOnly = true)
-    public ResponseEntity<List<User>> getAllUsersWithResponse() {
-        try {
-            List<User> users = getAllUsers();
-            return ResponseEntity.ok(users);
-        } catch (Exception e) {
-            return ResponseEntity.internalServerError().build();
+    public User getCurrentUserWithResponse(org.springframework.security.core.Authentication authentication) {
+        if (authentication != null && authentication.isAuthenticated()) {
+            String email = authentication.getName();
+            return getUserByEmail(email);
         }
-    }
-
-    @Override
-    @Transactional(readOnly = true)
-    public ResponseEntity<User> getUserByIdWithResponse(Long id) {
-        try {
-            User user = getUserById(id);
-            return ResponseEntity.ok(user);
-        } catch (Exception e) {
-            return ResponseEntity.notFound().build();
-        }
-    }
-
-    @Override
-    @Transactional(readOnly = true)
-    public ResponseEntity<User> getCurrentUserWithResponse(org.springframework.security.core.Authentication authentication) {
-        try {
-            if (authentication != null && authentication.isAuthenticated()) {
-                String email = authentication.getName();
-                User user = getUserByEmail(email);
-                return ResponseEntity.ok(user);
-            }
-            return ResponseEntity.notFound().build();
-        } catch (Exception e) {
-            return ResponseEntity.notFound().build();
-        }
+        throw new RuntimeException("User not authenticated");
     }
 
     @Override
     @Transactional
-    public ResponseEntity<Map<String, Object>> createUserWithResponse(Map<String, Object> userData) {
+    public Map<String, Object> createUserWithResponse(Map<String, Object> userData) {
         try {
             User user = new User();
             user.setFirstName((String) userData.get("firstName"));
@@ -171,25 +143,25 @@ public class UserServiceImpl implements UserService {
             response.put("message", "User " + createdUser.getEmail() + " has been added successfully!");
             response.put("user", createdUser);
             
-            return ResponseEntity.ok(response);
+            return response;
         } catch (Exception e) {
             Map<String, Object> response = new HashMap<>();
             response.put("success", false);
             response.put("message", "Error creating user: " + e.getMessage());
-            return ResponseEntity.badRequest().body(response);
+            return response;
         }
     }
 
     @Override
     @Transactional
-    public ResponseEntity<Map<String, Object>> updateUserWithResponse(Long id, Map<String, Object> userData) {
+    public Map<String, Object> updateUserWithResponse(Long id, Map<String, Object> userData) {
         try {
             User existingUser = getUserById(id);
             if (existingUser == null) {
                 Map<String, Object> response = new HashMap<>();
                 response.put("success", false);
                 response.put("message", "User not found");
-                return ResponseEntity.notFound().build();
+                return response;
             }
 
             User user = new User();
@@ -220,25 +192,25 @@ public class UserServiceImpl implements UserService {
             response.put("message", "User " + updatedUser.getUsername() + " has been updated successfully!");
             response.put("user", updatedUser);
             
-            return ResponseEntity.ok(response);
+            return response;
         } catch (Exception e) {
             Map<String, Object> response = new HashMap<>();
             response.put("success", false);
             response.put("message", "Error updating user: " + e.getMessage());
-            return ResponseEntity.badRequest().body(response);
+            return response;
         }
     }
 
     @Override
     @Transactional
-    public ResponseEntity<Map<String, Object>> deleteUserWithResponse(Long id) {
+    public Map<String, Object> deleteUserWithResponse(Long id) {
         try {
             User user = getUserById(id);
             if (user == null) {
                 Map<String, Object> response = new HashMap<>();
                 response.put("success", false);
                 response.put("message", "User not found");
-                return ResponseEntity.notFound().build();
+                return response;
             }
 
             String username = user.getUsername();
@@ -248,12 +220,12 @@ public class UserServiceImpl implements UserService {
             response.put("success", true);
             response.put("message", "User " + username + " has been deleted.");
             
-            return ResponseEntity.ok(response);
+            return response;
         } catch (Exception e) {
             Map<String, Object> response = new HashMap<>();
             response.put("success", false);
             response.put("message", "Error deleting user: " + e.getMessage());
-            return ResponseEntity.badRequest().body(response);
+            return response;
         }
     }
 

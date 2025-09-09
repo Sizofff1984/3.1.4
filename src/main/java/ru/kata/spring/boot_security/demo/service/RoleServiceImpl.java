@@ -1,7 +1,6 @@
 package ru.kata.spring.boot_security.demo.service;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import ru.kata.spring.boot_security.demo.model.Role;
 import ru.kata.spring.boot_security.demo.repository.RoleRepository;
@@ -40,16 +39,6 @@ public class RoleServiceImpl implements RoleService {
         }
         if (roleRepository.findByName("ROLE_ADMIN").isEmpty()) {
             roleRepository.save(new Role("ROLE_ADMIN"));
-        }
-    }
-
-    @Override
-    public ResponseEntity<List<Role>> getAllRolesWithResponse() {
-        try {
-            List<Role> roles = getAllRoles();
-            return ResponseEntity.ok(roles);
-        } catch (Exception e) {
-            return ResponseEntity.internalServerError().build();
         }
     }
 }
