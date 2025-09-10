@@ -20,6 +20,7 @@ public class UserRestController {
         this.userService = userService;
     }
 
+    // REST API endpoint
     @GetMapping("/profile")
     public ResponseEntity<User> getUserProfile(Authentication authentication) {
         try {
@@ -31,7 +32,7 @@ public class UserRestController {
     }
 
     // Web endpoint for HTML page
-    @GetMapping
+    @GetMapping(produces = "text/html")
     public String showUserProfile(Authentication authentication, Model model) {
         try {
             User user = userService.getCurrentUserWithResponse(authentication);
@@ -42,5 +43,3 @@ public class UserRestController {
         }
     }
 }
-
-
