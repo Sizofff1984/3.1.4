@@ -7,12 +7,9 @@ import ru.kata.spring.boot_security.demo.model.Role;
 import ru.kata.spring.boot_security.demo.model.User;
 import ru.kata.spring.boot_security.demo.repository.UserRepository;
 
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 @Service
 public class UserServiceImpl implements UserService {
@@ -109,125 +106,6 @@ public class UserServiceImpl implements UserService {
     }
 
 
-    @Override
-    @Transactional(readOnly = true)
-    public User getCurrentUserWithResponse(org.springframework.security.core.Authentication authentication) {
-        if (authentication != null && authentication.isAuthenticated()) {
-            String email = authentication.getName();
-            return getUserByEmail(email);
-        }
-        throw new RuntimeException("User not authenticated");
-    }
-
-    @Override
-    @Transactional
-    public Map<String, Object> createUserWithResponse(Map<String, Object> userData) {
-        try {
-            User user = new User();
-            user.setFirstName((String) userData.get("firstName"));
-            user.setLastName((String) userData.get("lastName"));
-            user.setAge((Integer) userData.get("age"));
-            user.setEmail((String) userData.get("email"));
-            user.setPassword((String) userData.get("password"));
-
-            @SuppressWarnings("unchecked")
-            List<Integer> roleIdsInt = (List<Integer>) userData.get("roleIds");
-            List<Long> roleIds = roleIdsInt.stream()
-                    .map(Integer::longValue)
-                    .collect(Collectors.toList());
-
-            User createdUser = createUser(user, roleIds);
-            
-            Map<String, Object> response = new HashMap<>();
-            response.put("success", true);
-            response.put("message", "User " + createdUser.getEmail() + " has been added successfully!");
-            response.put("user", createdUser);
-            
-            return response;
-        } catch (Exception e) {
-            Map<String, Object> response = new HashMap<>();
-            response.put("success", false);
-            response.put("message", "Error creating user: " + e.getMessage());
-            return response;
-        }
-    }
-
-    @Override
-    @Transactional
-    public Map<String, Object> updateUserWithResponse(Long id, Map<String, Object> userData) {
-        try {
-            User existingUser = getUserById(id);
-            if (existingUser == null) {
-                Map<String, Object> response = new HashMap<>();
-                response.put("success", false);
-                response.put("message", "User not found");
-                return response;
-            }
-
-            User user = new User();
-            user.setId(id);
-            user.setFirstName((String) userData.get("firstName"));
-            user.setLastName((String) userData.get("lastName"));
-            user.setAge((Integer) userData.get("age"));
-            user.setEmail((String) userData.get("email"));
-            
-            // Если пароль не пустой, обновляем его
-            String password = (String) userData.get("password");
-            if (password != null && !password.trim().isEmpty()) {
-                user.setPassword(password);
-            } else {
-                user.setPassword(existingUser.getPassword());
-            }
-
-            @SuppressWarnings("unchecked")
-            List<Integer> roleIdsInt = (List<Integer>) userData.get("roleIds");
-            List<Long> roleIds = roleIdsInt.stream()
-                    .map(Integer::longValue)
-                    .collect(Collectors.toList());
-
-            User updatedUser = updateUser(user, roleIds);
-            
-            Map<String, Object> response = new HashMap<>();
-            response.put("success", true);
-            response.put("message", "User " + updatedUser.getUsername() + " has been updated successfully!");
-            response.put("user", updatedUser);
-            
-            return response;
-        } catch (Exception e) {
-            Map<String, Object> response = new HashMap<>();
-            response.put("success", false);
-            response.put("message", "Error updating user: " + e.getMessage());
-            return response;
-        }
-    }
-
-    @Override
-    @Transactional
-    public Map<String, Object> deleteUserWithResponse(Long id) {
-        try {
-            User user = getUserById(id);
-            if (user == null) {
-                Map<String, Object> response = new HashMap<>();
-                response.put("success", false);
-                response.put("message", "User not found");
-                return response;
-            }
-
-            String username = user.getUsername();
-            deleteUser(id);
-            
-            Map<String, Object> response = new HashMap<>();
-            response.put("success", true);
-            response.put("message", "User " + username + " has been deleted.");
-            
-            return response;
-        } catch (Exception e) {
-            Map<String, Object> response = new HashMap<>();
-            response.put("success", false);
-            response.put("message", "Error deleting user: " + e.getMessage());
-            return response;
-        }
-    }
 
     private void setUserRoles(User user, List<Long> roleIds) {
         if (roleIds != null && !roleIds.isEmpty()) {

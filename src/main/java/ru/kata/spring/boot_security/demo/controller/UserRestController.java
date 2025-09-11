@@ -20,24 +20,30 @@ public class UserRestController {
         this.userService = userService;
     }
 
-    // REST API endpoint
     @GetMapping("/profile")
     public ResponseEntity<User> getUserProfile(Authentication authentication) {
         try {
-            User user = userService.getCurrentUserWithResponse(authentication);
-            return ResponseEntity.ok(user);
+            if (authentication != null && authentication.isAuthenticated()) {
+                String email = authentication.getName();
+                User user = userService.getUserByEmail(email);
+                return ResponseEntity.ok(user);
+            }
+            return ResponseEntity.notFound().build();
         } catch (Exception e) {
             return ResponseEntity.notFound().build();
         }
     }
 
-    // Web endpoint for HTML page
     @GetMapping(produces = "text/html")
     public String showUserProfile(Authentication authentication, Model model) {
         try {
-            User user = userService.getCurrentUserWithResponse(authentication);
-            model.addAttribute("user", user);
-            return "user/profile";
+            if (authentication != null && authentication.isAuthenticated()) {
+                String email = authentication.getName();
+                User user = userService.getUserByEmail(email);
+                model.addAttribute("user", user);
+                return "user/profile";
+            }
+            return "redirect:/login";
         } catch (Exception e) {
             return "redirect:/login";
         }

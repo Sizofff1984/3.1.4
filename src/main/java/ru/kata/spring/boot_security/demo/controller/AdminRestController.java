@@ -1,6 +1,5 @@
 package ru.kata.spring.boot_security.demo.controller;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Controller;
@@ -11,8 +10,10 @@ import ru.kata.spring.boot_security.demo.model.User;
 import ru.kata.spring.boot_security.demo.service.RoleService;
 import ru.kata.spring.boot_security.demo.service.UserService;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 @Controller
 @RequestMapping("/api/admin")
@@ -21,87 +22,68 @@ public class AdminRestController {
     private final UserService userService;
     private final RoleService roleService;
 
-    @Autowired
     public AdminRestController(UserService userService, RoleService roleService) {
         this.userService = userService;
         this.roleService = roleService;
     }
 
-    // REST API endpoints
     @GetMapping(value = "/users", produces = "application/json")
     public ResponseEntity<List<User>> getAllUsers() {
-        try {
-            List<User> users = userService.getAllUsers();
-            return ResponseEntity.ok(users);
-        } catch (Exception e) {
-            return ResponseEntity.internalServerError().build();
-        }
+        return ResponseEntity.ok(userService.getAllUsers());
     }
 
     @GetMapping("/users/{id}")
     public ResponseEntity<User> getUserById(@PathVariable Long id) {
-        try {
-            User user = userService.getUserById(id);
-            return ResponseEntity.ok(user);
-        } catch (Exception e) {
-            return ResponseEntity.notFound().build();
-        }
+        return ResponseEntity.ok(userService.getUserById(id));
     }
 
     @PostMapping("/users")
     public ResponseEntity<Map<String, Object>> createUser(@RequestBody Map<String, Object> userData) {
-        Map<String, Object> response = userService.createUserWithResponse(userData);
-        boolean success = (Boolean) response.get("success");
-        if (success) {
-            return ResponseEntity.ok(response);
-        } else {
-            return ResponseEntity.badRequest().body(response);
-        }
+        User user = createUserFromData(userData);
+        List<Long> roleIds = extractRoleIds(userData);
+        User createdUser = userService.createUser(user, roleIds);
+        return ResponseEntity.ok(createSuccessResponse("User " + createdUser.getEmail() + " has been added successfully!", createdUser));
     }
 
     @PutMapping("/users/{id}")
     public ResponseEntity<Map<String, Object>> updateUser(@PathVariable Long id, @RequestBody Map<String, Object> userData) {
-        Map<String, Object> response = userService.updateUserWithResponse(id, userData);
-        boolean success = (Boolean) response.get("success");
-        if (success) {
-            return ResponseEntity.ok(response);
-        } else {
-            return ResponseEntity.badRequest().body(response);
+        User existingUser = userService.getUserById(id);
+        User user = createUserFromData(userData);
+        user.setId(id);
+        
+        String password = (String) userData.get("password");
+        if (password == null || password.trim().isEmpty()) {
+            user.setPassword(existingUser.getPassword());
         }
+        
+        List<Long> roleIds = extractRoleIds(userData);
+        User updatedUser = userService.updateUser(user, roleIds);
+        return ResponseEntity.ok(createSuccessResponse("User " + updatedUser.getUsername() + " has been updated successfully!", updatedUser));
     }
 
     @DeleteMapping("/users/{id}")
     public ResponseEntity<Map<String, Object>> deleteUser(@PathVariable Long id) {
-        Map<String, Object> response = userService.deleteUserWithResponse(id);
-        boolean success = (Boolean) response.get("success");
-        if (success) {
-            return ResponseEntity.ok(response);
-        } else {
-            return ResponseEntity.badRequest().body(response);
-        }
+        User user = userService.getUserById(id);
+        String username = user.getUsername();
+        userService.deleteUser(id);
+        return ResponseEntity.ok(createSuccessResponse("User " + username + " has been deleted.", null));
     }
 
     @GetMapping("/roles")
     public ResponseEntity<List<Role>> getAllRoles() {
-        try {
-            List<Role> roles = roleService.getAllRoles();
-            return ResponseEntity.ok(roles);
-        } catch (Exception e) {
-            return ResponseEntity.internalServerError().build();
-        }
+        return ResponseEntity.ok(roleService.getAllRoles());
     }
 
     @GetMapping("/current-user")
     public ResponseEntity<User> getCurrentUser(Authentication authentication) {
-        try {
-            User user = userService.getCurrentUserWithResponse(authentication);
+        if (authentication != null && authentication.isAuthenticated()) {
+            String email = authentication.getName();
+            User user = userService.getUserByEmail(email);
             return ResponseEntity.ok(user);
-        } catch (Exception e) {
-            return ResponseEntity.notFound().build();
         }
+        return ResponseEntity.notFound().build();
     }
 
-    // Web endpoints for HTML pages
     @GetMapping(value = "/panel", produces = "text/html")
     public String showAdminPanel(Model model) {
         model.addAttribute("users", userService.getAllUsers());
@@ -117,13 +99,37 @@ public class AdminRestController {
 
     @GetMapping(value = "/edit-user/{id}", produces = "text/html")
     public String showEditUserForm(@PathVariable Long id, Model model) {
-        try {
-            User user = userService.getUserById(id);
-            model.addAttribute("user", user);
-            model.addAttribute("roles", roleService.getAllRoles());
-            return "admin/edit-user";
-        } catch (Exception e) {
-            return "redirect:/api/admin/panel";
+        User user = userService.getUserById(id);
+        model.addAttribute("user", user);
+        model.addAttribute("roles", roleService.getAllRoles());
+        return "admin/edit-user";
+    }
+
+    private User createUserFromData(Map<String, Object> userData) {
+        User user = new User();
+        user.setFirstName((String) userData.get("firstName"));
+        user.setLastName((String) userData.get("lastName"));
+        user.setAge((Integer) userData.get("age"));
+        user.setEmail((String) userData.get("email"));
+        user.setPassword((String) userData.get("password"));
+        return user;
+    }
+
+    @SuppressWarnings("unchecked")
+    private List<Long> extractRoleIds(Map<String, Object> userData) {
+        List<Integer> roleIdsInt = (List<Integer>) userData.get("roleIds");
+        return roleIdsInt.stream()
+                .map(Integer::longValue)
+                .collect(Collectors.toList());
+    }
+
+    private Map<String, Object> createSuccessResponse(String message, User user) {
+        Map<String, Object> response = new HashMap<>();
+        response.put("success", true);
+        response.put("message", message);
+        if (user != null) {
+            response.put("user", user);
         }
+        return response;
     }
 }
