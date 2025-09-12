@@ -10,10 +10,7 @@ import ru.kata.spring.boot_security.demo.model.User;
 import ru.kata.spring.boot_security.demo.service.RoleService;
 import ru.kata.spring.boot_security.demo.service.UserService;
 
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
-import java.util.stream.Collectors;
 
 @Controller
 @RequestMapping("/api/admin")
@@ -38,35 +35,37 @@ public class AdminRestController {
     }
 
     @PostMapping("/users")
-    public ResponseEntity<Map<String, Object>> createUser(@RequestBody Map<String, Object> userData) {
-        User user = createUserFromData(userData);
-        List<Long> roleIds = extractRoleIds(userData);
-        User createdUser = userService.createUser(user, roleIds);
-        return ResponseEntity.ok(createSuccessResponse("User " + createdUser.getEmail() + " has been added successfully!", createdUser));
+    public ResponseEntity<User> createUser(@RequestBody User user, @RequestParam(required = false) List<Long> roleIds) {
+        try {
+            if (roleIds == null || roleIds.isEmpty()) {
+                roleIds = List.of(1L);
+            }
+            
+            User createdUser = userService.createUser(user, roleIds);
+            return ResponseEntity.status(201).body(createdUser);
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().build();
+        }
     }
 
     @PutMapping("/users/{id}")
-    public ResponseEntity<Map<String, Object>> updateUser(@PathVariable Long id, @RequestBody Map<String, Object> userData) {
-        User existingUser = userService.getUserById(id);
-        User user = createUserFromData(userData);
-        user.setId(id);
-        
-        String password = (String) userData.get("password");
-        if (password == null || password.trim().isEmpty()) {
-            user.setPassword(existingUser.getPassword());
+    public ResponseEntity<User> updateUser(@PathVariable Long id, @RequestBody User user, @RequestParam(required = false) List<Long> roleIds) {
+        try {
+            User updatedUser = userService.updateUserById(id, user, roleIds);
+            return ResponseEntity.ok(updatedUser);
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().build();
         }
-        
-        List<Long> roleIds = extractRoleIds(userData);
-        User updatedUser = userService.updateUser(user, roleIds);
-        return ResponseEntity.ok(createSuccessResponse("User " + updatedUser.getUsername() + " has been updated successfully!", updatedUser));
     }
 
     @DeleteMapping("/users/{id}")
-    public ResponseEntity<Map<String, Object>> deleteUser(@PathVariable Long id) {
-        User user = userService.getUserById(id);
-        String username = user.getUsername();
-        userService.deleteUser(id);
-        return ResponseEntity.ok(createSuccessResponse("User " + username + " has been deleted.", null));
+    public ResponseEntity<Void> deleteUser(@PathVariable Long id) {
+        try {
+            userService.deleteUser(id);
+            return ResponseEntity.ok().build();
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().build();
+        }
     }
 
     @GetMapping("/roles")
@@ -105,31 +104,4 @@ public class AdminRestController {
         return "admin/edit-user";
     }
 
-    private User createUserFromData(Map<String, Object> userData) {
-        User user = new User();
-        user.setFirstName((String) userData.get("firstName"));
-        user.setLastName((String) userData.get("lastName"));
-        user.setAge((Integer) userData.get("age"));
-        user.setEmail((String) userData.get("email"));
-        user.setPassword((String) userData.get("password"));
-        return user;
-    }
-
-    @SuppressWarnings("unchecked")
-    private List<Long> extractRoleIds(Map<String, Object> userData) {
-        List<Integer> roleIdsInt = (List<Integer>) userData.get("roleIds");
-        return roleIdsInt.stream()
-                .map(Integer::longValue)
-                .collect(Collectors.toList());
-    }
-
-    private Map<String, Object> createSuccessResponse(String message, User user) {
-        Map<String, Object> response = new HashMap<>();
-        response.put("success", true);
-        response.put("message", message);
-        if (user != null) {
-            response.put("user", user);
-        }
-        return response;
-    }
 }

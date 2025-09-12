@@ -360,7 +360,6 @@
                 </tr>
                 </thead>
                 <tbody id="usersTableBody">
-                <!-- Users will be loaded here via JavaScript -->
                 </tbody>
             </table>
         </div>
@@ -393,7 +392,6 @@
                 <div class="mb-3">
                     <label class="form-label">Role</label>
                     <select class="form-select" id="addRoleIds" multiple size="3" required>
-                        <!-- Roles will be loaded here via JavaScript -->
                     </select>
                 </div>
                 <button type="submit" class="btn-add">Add new user</button>
@@ -432,7 +430,6 @@
     </div>
 </div>
 
-<!-- Edit Modal -->
 <div class="modal fade" id="editModal" tabindex="-1" aria-labelledby="editModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-lg">
         <div class="modal-content">
@@ -477,7 +474,6 @@
                     <div class="mb-3">
                         <label class="form-label">Role</label>
                         <select class="form-select" id="editRoleIds" multiple size="3">
-                            <!-- Roles will be loaded here via JavaScript -->
                         </select>
                     </div>
 
@@ -491,7 +487,6 @@
     </div>
 </div>
 
-<!-- Delete Modal -->
 <div class="modal fade" id="deleteModal" tabindex="-1" aria-labelledby="deleteModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-lg">
         <div class="modal-content">
@@ -531,7 +526,6 @@
                     <div class="mb-3">
                         <label class="form-label">Role</label>
                         <select class="form-select" id="deleteRoles" disabled multiple size="3">
-                            <!-- Roles will be loaded here via JavaScript -->
                         </select>
                     </div>
 
@@ -584,9 +578,14 @@
         }
     }
 
-    async function createUser(userData) {
+    async function createUser(userData, roleIds) {
         try {
-            const response = await fetch('/api/admin/users', {
+            const url = new URL('/api/admin/users', window.location.origin);
+            if (roleIds && roleIds.length > 0) {
+                roleIds.forEach(id => url.searchParams.append('roleIds', id));
+            }
+            
+            const response = await fetch(url, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -594,26 +593,30 @@
                 body: JSON.stringify(userData)
             });
 
-            const result = await response.json();
-            
-            if (result.success) {
-                showAlert(result.message, 'success');
+            if (response.status === 201) {
+                const createdUser = await response.json();
+                showAlert('User ' + createdUser.email + ' has been created successfully!', 'success');
                 await fetchUsers(); // Refresh users list
                 document.getElementById('addUserForm').reset();
                 // Switch back to users table tab
                 showTab('users-table');
             } else {
-                showAlert(result.message, 'danger');
+                showAlert('Error creating user: ' + response.status, 'danger');
             }
         } catch (error) {
             console.error('Error creating user:', error);
-            showAlert('Error creating user', 'danger');
+            showAlert('Error creating user: ' + error.message, 'danger');
         }
     }
 
-    async function updateUser(id, userData) {
+    async function updateUser(id, userData, roleIds) {
         try {
-            const response = await fetch(`/api/admin/users/${id}`, {
+            const url = new URL(`/api/admin/users/${id}`, window.location.origin);
+            if (roleIds && roleIds.length > 0) {
+                roleIds.forEach(roleId => url.searchParams.append('roleIds', roleId));
+            }
+            
+            const response = await fetch(url, {
                 method: 'PUT',
                 headers: {
                     'Content-Type': 'application/json',
@@ -621,19 +624,18 @@
                 body: JSON.stringify(userData)
             });
 
-            const result = await response.json();
-            
-            if (result.success) {
-                showAlert(result.message, 'success');
+            if (response.ok) {
+                const updatedUser = await response.json();
+                showAlert('User ' + updatedUser.email + ' has been updated successfully!', 'success');
                 await fetchUsers(); // Refresh users list
                 // Switch back to users table tab
                 showTab('users-table');
             } else {
-                showAlert(result.message, 'danger');
+                showAlert('Error updating user: ' + response.status, 'danger');
             }
         } catch (error) {
             console.error('Error updating user:', error);
-            showAlert('Error updating user', 'danger');
+            showAlert('Error updating user: ' + error.message, 'danger');
         }
     }
 
@@ -643,19 +645,17 @@
                 method: 'DELETE'
             });
 
-            const result = await response.json();
-            
-            if (result.success) {
-                showAlert(result.message, 'success');
+            if (response.ok) {
+                showAlert('User has been deleted successfully!', 'success');
                 await fetchUsers(); // Refresh users list
                 // Switch back to users table tab
                 showTab('users-table');
             } else {
-                showAlert(result.message, 'danger');
+                showAlert('Error deleting user: ' + response.status, 'danger');
             }
         } catch (error) {
             console.error('Error deleting user:', error);
-            showAlert('Error deleting user', 'danger');
+            showAlert('Error deleting user: ' + error.message, 'danger');
         }
     }
 
@@ -893,11 +893,12 @@
                 lastName: document.getElementById('addLastName').value,
                 age: parseInt(document.getElementById('addAge').value),
                 email: document.getElementById('addEmail').value,
-                password: document.getElementById('addPassword').value,
-                roleIds: Array.from(document.getElementById('addRoleIds').selectedOptions).map(option => parseInt(option.value))
+                password: document.getElementById('addPassword').value
             };
+            
+            const roleIds = Array.from(document.getElementById('addRoleIds').selectedOptions).map(option => parseInt(option.value));
 
-            await createUser(userData);
+            await createUser(userData, roleIds);
             return false; // Additional protection against page reload
         });
 
@@ -912,11 +913,12 @@
                 lastName: document.getElementById('editLastName').value,
                 age: parseInt(document.getElementById('editAge').value),
                 email: document.getElementById('editEmail').value,
-                password: document.getElementById('editPassword').value,
-                roleIds: Array.from(document.getElementById('editRoleIds').selectedOptions).map(option => parseInt(option.value))
+                password: document.getElementById('editPassword').value
             };
+            
+            const roleIds = Array.from(document.getElementById('editRoleIds').selectedOptions).map(option => parseInt(option.value));
 
-            await updateUser(userId, userData);
+            await updateUser(userId, userData, roleIds);
             
             // Close modal
             const editModal = bootstrap.Modal.getInstance(document.getElementById('editModal'));

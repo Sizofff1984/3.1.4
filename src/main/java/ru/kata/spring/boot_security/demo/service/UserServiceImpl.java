@@ -105,6 +105,25 @@ public class UserServiceImpl implements UserService {
         userRepository.delete(user);
     }
 
+    @Override
+    @Transactional
+    public User updateUserById(Long id, User user, List<Long> roleIds) {
+        User existingUser = getUserById(id);
+        user.setId(id);
+        
+        if (user.getPassword() == null || user.getPassword().trim().isEmpty()) {
+            user.setPassword(existingUser.getPassword());
+        }
+        
+        if (roleIds == null || roleIds.isEmpty()) {
+            roleIds = existingUser.getRoles().stream()
+                    .map(role -> role.getId())
+                    .collect(java.util.stream.Collectors.toList());
+        }
+        
+        return updateUser(user, roleIds);
+    }
+
 
 
     private void setUserRoles(User user, List<Long> roleIds) {
