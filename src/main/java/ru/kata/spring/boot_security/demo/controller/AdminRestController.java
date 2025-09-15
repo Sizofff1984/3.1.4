@@ -37,12 +37,7 @@ public class AdminRestController {
     @PostMapping("/users")
     public ResponseEntity<User> createUser(@RequestBody User user, @RequestParam(required = false) List<Long> roleIds) {
         try {
-            if (roleIds == null || roleIds.isEmpty()) {
-                roleIds = List.of(1L);
-            }
-            
-            User createdUser = userService.createUser(user, roleIds);
-            return ResponseEntity.status(201).body(createdUser);
+            return ResponseEntity.status(201).body(userService.createUser(user, roleIds));
         } catch (Exception e) {
             return ResponseEntity.badRequest().build();
         }
@@ -51,8 +46,7 @@ public class AdminRestController {
     @PutMapping("/users/{id}")
     public ResponseEntity<User> updateUser(@PathVariable Long id, @RequestBody User user, @RequestParam(required = false) List<Long> roleIds) {
         try {
-            User updatedUser = userService.updateUserById(id, user, roleIds);
-            return ResponseEntity.ok(updatedUser);
+            return ResponseEntity.ok(userService.updateUserById(id, user, roleIds));
         } catch (Exception e) {
             return ResponseEntity.badRequest().build();
         }
@@ -76,9 +70,7 @@ public class AdminRestController {
     @GetMapping("/current-user")
     public ResponseEntity<User> getCurrentUser(Authentication authentication) {
         if (authentication != null && authentication.isAuthenticated()) {
-            String email = authentication.getName();
-            User user = userService.getUserByEmail(email);
-            return ResponseEntity.ok(user);
+            return ResponseEntity.ok(userService.getUserByEmail(authentication.getName()));
         }
         return ResponseEntity.notFound().build();
     }

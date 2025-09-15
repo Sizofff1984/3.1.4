@@ -69,6 +69,10 @@ public class UserServiceImpl implements UserService {
             user.setPassword(passwordEncoder.encode(user.getPassword()));
         }
 
+        if (roleIds == null || roleIds.isEmpty()) {
+            roleIds = List.of(1L);
+        }
+
         setUserRoles(user, roleIds);
         return userRepository.save(user);
     }
